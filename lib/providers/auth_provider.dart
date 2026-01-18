@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
   bool _isAuthenticated = false;
   Map<String, dynamic>? _user;
   bool _isLoading = false;
   String? _error;
+  String? _accessToken;
+  String? _refreshToken;
 
   bool get isAuthenticated => _isAuthenticated;
   Map<String, dynamic>? get user => _user;
@@ -22,27 +22,31 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('AuthProvider: Starting login...');
       final response = await _apiService.login(email, password);
       
-      // Store tokens securely
-      await _storage.write(
-        key: 'access_token',
-        value: response['tokens']['access'],
-      );
-      await _storage.write(
-        key: 'refresh_token',
-        value: response['tokens']['refresh'],
-      );
+      print('AuthProvider: Login response received');
+      print('AuthProvider: User data: ${response['user']}');
+      print('AuthProvider: Has tokens: ${response['tokens'] != null}');
+      
+      // Store tokens in memory
+      _accessToken = response['tokens']['access'];
+      _refreshToken = response['tokens']['refresh'];
+      _apiService.setTokens(_accessToken!, _refreshToken!);
       
       _user = response['user'];
       _isAuthenticated = true;
       _error = null;
+      
+      print('AuthProvider: Login successful, isAuthenticated = $_isAuthenticated');
     } catch (e) {
+      print('AuthProvider: Login error: $e');
       _error = e.toString();
       _isAuthenticated = false;
     } finally {
       _isLoading = false;
       notifyListeners();
+      print('AuthProvider: notifyListeners called');
     }
   }
 
@@ -52,8 +56,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _apiService.logout();
-      await _storage.delete(key: 'access_token');
-      await _storage.delete(key: 'refresh_token');
+      _accessToken = null;
+      _refreshToken = null;
       
       _isAuthenticated = false;
       _user = null;
@@ -64,11 +68,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> checkAuthStatus() async {
-    final accessToken = await _storage.read(key: 'access_token');
-    final refreshToken = await _storage.read(key: 'refresh_token');
-    
-    if (accessToken != null && refreshToken != null) {
-      _apiService.setTokens(accessToken, refreshToken);
+    // Since we're storing tokens in memory, they'll be lost on app restart
+    // This is fine for development
+    if (_accessToken != null && _refreshToken != null) {
+      _apiService.setTokens(_accessToken!, _refreshToken!);
       
       try {
         final response = await _apiService.getProfile();
@@ -83,3 +86,4 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

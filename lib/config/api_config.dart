@@ -1,11 +1,18 @@
+import 'environment.dart';
+
 class ApiConfig {
-  // Change this to your actual backend URL
-  static const String baseUrl = 'http://localhost:8000';  // For local dev
-  // static const String baseUrl = 'https://myblueboard.com';  // For production
+  // Get base URL from environment configuration
+  static String get baseUrl => EnvironmentConfig.baseUrl;
   
-  // Admin API endpoints
-  static const String adminApiBase = '$baseUrl/api/admin';
-  static const String loginEndpoint = '$adminApiBase/auth/login/';
-  static const String logoutEndpoint = '$adminApiBase/auth/logout/';
-  static const String profileEndpoint = '$adminApiBase/auth/profile/';
+  // Admin API endpoints using signup schema
+  static String get adminApiBase => '$baseUrl/api/admin';
+  static String get loginEndpoint => '$adminApiBase/auth/login/';
+  static String get logoutEndpoint => '$adminApiBase/auth/logout/';
+  static String get profileEndpoint => '$adminApiBase/auth/profile/';
+  static String get dashboardStatsEndpoint => '$adminApiBase/dashboard/stats/';
+  
+  // Additional admin endpoints
+  static String get usersEndpoint => '$adminApiBase/users/';
+  static String get clientsEndpoint => '$adminApiBase/clients/';
+  static String get accountsEndpoint => '$adminApiBase/accounts/';
 }

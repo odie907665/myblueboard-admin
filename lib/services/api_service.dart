@@ -34,6 +34,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
+      print('Attempting login to: ${ApiConfig.loginEndpoint}');
       final response = await http.post(
         Uri.parse(ApiConfig.loginEndpoint),
         headers: _getHeaders(),
@@ -43,17 +44,24 @@ class ApiService {
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
         // Store tokens
         _accessToken = data['tokens']['access'];
         _refreshToken = data['tokens']['refresh'];
+        print('Login successful, tokens stored');
         return data;
       } else {
-        throw Exception(data['errors']?.toString() ?? 'Login failed');
+        final errorMsg = data['errors']?.toString() ?? data['message']?.toString() ?? 'Login failed';
+        print('Login failed: $errorMsg');
+        throw Exception(errorMsg);
       }
     } catch (e) {
+      print('Login error: $e');
       throw Exception('Failed to connect to server: $e');
     }
   }
@@ -90,6 +98,96 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to connect to server: $e');
+    }
+  }
+
+  // Dashboard
+  Future<Map<String, dynamic>?> getDashboardStats() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.dashboardStatsEndpoint),
+        headers: _getHeaders(includeAuth: true),
+      );
+
+      print('Dashboard stats response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data['stats'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching dashboard stats: $e');
+      return null;
+    }
+  }
+
+  // Clients
+  Future<List<Map<String, dynamic>>> getClients() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConfig.clientsEndpoint),
+        headers: _getHeaders(includeAuth: true),
+      );
+
+      print('Clients response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return List<Map<String, dynamic>>.from(data['clients']);
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching clients: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getClientSettings(String schemaName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/settings/'),
+        headers: _getHeaders(includeAuth: true),
+      );
+
+      print('Client settings response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching client settings: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> getClientAdmins(String schemaName) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/admins/'),
+        headers: _getHeaders(includeAuth: true),
+      );
+
+      print('Client admins response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return List<Map<String, dynamic>>.from(data['admins']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching client admins: $e');
+      return null;
     }
   }
 }
