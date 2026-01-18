@@ -296,10 +296,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     ),
                 ],
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                onPressed: () => _showEditClientDialog(client),
-              ),
               onTap: () => _showClientDetails(client),
             );
           },
@@ -378,95 +374,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   void _showClientDetails(Map<String, dynamic> client) {
-    final name = client['name'] ?? 'Unknown';
-    final domain = client['domain'] ?? 'No domain';
-    final schemaName = client['schema_name'] ?? '';
-    final orgType = client['organization_type'] ?? 'Unknown';
-    final accountType = client['account_type'] ?? 'N/A';
-    final city = client['address_city'] ?? '';
-    final state = client['address_state'] ?? '';
-    final zipcode = client['address_zipcode']?.toString() ?? '';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.business, color: Color(0xFF004aad)),
-            const SizedBox(width: 12),
-            Expanded(child: Text(name)),
-          ],
-        ),
-        content: SizedBox(
-          width: 500,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDetailRow('Domain', domain),
-              _buildDetailRow('Schema Name', schemaName),
-              _buildDetailRow('Organization Type', orgType),
-              _buildDetailRow('Account Type', accountType),
-              if (city.isNotEmpty) _buildDetailRow('City', city),
-              if (state.isNotEmpty) _buildDetailRow('State', state),
-              if (zipcode.isNotEmpty) _buildDetailRow('Zipcode', zipcode),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.pushNamed(
-                context,
-                '/client-settings',
-                arguments: client,
-              );
-            },
-            icon: const Icon(Icons.settings),
-            label: const Text('Show Client Settings'),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showEditClientDialog(client);
-            },
-            icon: const Icon(Icons.edit),
-            label: const Text('Edit'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 150,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
+    Navigator.pushNamed(
+      context,
+      '/client-settings',
+      arguments: client,
     );
   }
 }

@@ -86,7 +86,7 @@ class ThemeProvider extends ChangeNotifier {
           side: BorderSide(color: Colors.grey.shade800),
         ),
       ),
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: const Color(0xFF0A0A0A), // Matte black background
     );
   }
 }

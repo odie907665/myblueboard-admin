@@ -190,4 +190,70 @@ class ApiService {
       return null;
     }
   }
+
+  // Update Client
+  Future<bool> updateClient(String schemaName, Map<String, dynamic> clientData) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/update/'),
+        headers: _getHeaders(includeAuth: true),
+        body: json.encode(clientData),
+      );
+
+      print('Update client response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating client: $e');
+      return false;
+    }
+  }
+
+  // Update School
+  Future<bool> updateSchool(String schemaName, Map<String, dynamic> schoolData) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/school/update/'),
+        headers: _getHeaders(includeAuth: true),
+        body: json.encode(schoolData),
+      );
+
+      print('Update school response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating school: $e');
+      return false;
+    }
+  }
+
+  // Update App Settings
+  Future<bool> updateAppSettings(String schemaName, Map<String, dynamic> settingsData) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/app-settings/update/'),
+        headers: _getHeaders(includeAuth: true),
+        body: json.encode(settingsData),
+      );
+
+      print('Update app settings response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error updating app settings: $e');
+      return false;
+    }
+  }
 }
