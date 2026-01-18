@@ -97,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
-                          childAspectRatio: isDesktop ? 1.5 : 1.2,
+                          childAspectRatio: isDesktop ? 1.8 : 1.3,
                           children: [
                             _buildStatCard(
                               context,
@@ -299,79 +299,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isPositive = trend.startsWith('+');
     return Card(
       elevation: 0,
-      child: Padding(
-        padding: EdgeInsets.all(isDesktop ? 20 : 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Container(
-                    padding: EdgeInsets.all(isDesktop ? 10 : 8),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: color, size: isDesktop ? 24 : 20),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 8 : 6,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isPositive
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      trend,
-                      style: TextStyle(
-                        fontSize: isDesktop ? 12 : 10,
-                        fontWeight: FontWeight.bold,
-                        color: isPositive ? Colors.green : Colors.red,
+      clipBehavior: Clip.hardEdge,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth = constraints.maxWidth;
+          final iconSize = availableWidth < 120 ? 18.0 : (isDesktop ? 24.0 : 20.0);
+          final valueFontSize = availableWidth < 120 ? 20.0 : (isDesktop ? 32.0 : 24.0);
+          
+          return ClipRect(
+            child: Padding(
+              padding: EdgeInsets.all(availableWidth < 120 ? 8 : (isDesktop ? 16 : 12)),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: availableWidth - (availableWidth < 120 ? 16 : (isDesktop ? 32 : 24)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(availableWidth < 120 ? 6 : (isDesktop ? 10 : 8)),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(icon, color: color, size: iconSize),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: availableWidth < 120 ? 4 : (isDesktop ? 8 : 6),
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isPositive
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              trend,
+                              style: TextStyle(
+                                fontSize: availableWidth < 120 ? 9 : (isDesktop ? 12 : 10),
+                                fontWeight: FontWeight.bold,
+                                color: isPositive ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      SizedBox(height: availableWidth < 120 ? 8 : (isDesktop ? 16 : 12)),
+                      Text(
+                        value,
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: isDesktop ? null : 20,
+                          fontSize: valueFontSize,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: availableWidth < 120 ? 11 : (isDesktop ? 14 : 12),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                        fontSize: isDesktop ? null : 12,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

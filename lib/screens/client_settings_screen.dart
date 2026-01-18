@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/admin_scaffold.dart';
 import '../services/api_service.dart';
+import 'compose_email_screen.dart';
 
 class ClientSettingsScreen extends StatefulWidget {
   final Map<String, dynamic> client;
@@ -630,19 +631,50 @@ class _ClientSettingsScreenState extends State<ClientSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.light 
+                          ? Colors.white 
+                          : Theme.of(context).dialogBackgroundColor,
                       border: Border(
-                        top: BorderSide(color: Colors.grey.shade800),
+                        top: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.light
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade700,
+                        ),
                       ),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: TextButton.styleFrom(
+                        FilledButton.icon(
+                          onPressed: () {
+                            // Extract email addresses from admins
+                            final emailAddresses = admins
+                                .map((admin) => admin['email']?.toString() ?? '')
+                                .where((email) => email.isNotEmpty)
+                                .toList();
+                            
+                            // Close the dialog
+                            Navigator.of(context).pop();
+                            
+                            // Navigate to compose email screen
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ComposeEmailScreen(
+                                  toEmails: emailAddresses,
+                                  subject: 'Message to ${widget.client['name']} Admins',
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.email),
+                          label: const Text('Email Admins'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF004aad),
                             foregroundColor: Colors.white,
                           ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
                           child: const Text('Close'),
                         ),
                       ],

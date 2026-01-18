@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/admin_scaffold.dart';
 import '../services/api_service.dart';
 
@@ -16,13 +15,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
   bool isLoading = true;
   List<Map<String, dynamic>> clients = [];
   List<Map<String, dynamic>> filteredClients = [];
-  String selectedView = 'grid';
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadViewPreference();
     _loadClients();
   }
 
@@ -30,18 +27,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadViewPreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      selectedView = prefs.getString('clients_view_preference') ?? 'grid';
-    });
-  }
-
-  Future<void> _saveViewPreference(String view) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('clients_view_preference', view);
   }
 
   Future<void> _loadClients() async {
@@ -117,27 +102,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
                             ),
                           ),
                       const SizedBox(width: 16),
-                      SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 'grid',
-                            icon: Icon(Icons.grid_view),
-                          ),
-                          ButtonSegment(
-                            value: 'list',
-                            icon: Icon(Icons.list),
-                          ),
-                        ],
-                        selected: {selectedView},
-                        onSelectionChanged: (Set<String> newSelection) {
-                          final newView = newSelection.first;
-                          setState(() {
-                            selectedView = newView;
-                          });
-                          _saveViewPreference(newView);
-                        },
-                      ),
-                      const SizedBox(width: 16),
                       FilledButton.icon(
                         onPressed: _showAddClientDialog,
                         icon: const Icon(Icons.add),
@@ -179,9 +143,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   Expanded(
                     child: filteredClients.isEmpty
                         ? _buildEmptyState()
-                        : selectedView == 'grid'
-                            ? _buildClientsGrid()
-                            : _buildClientsList(),
+                        : _buildClientsList(),
                   ),
                 ],
               ),
@@ -280,144 +242,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
             label: const Text('Add Client'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildClientsGrid() {
-    return RefreshIndicator(
-      onRefresh: _loadClients,
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
-        ),
-        itemCount: filteredClients.length,
-        itemBuilder: (context, index) {
-          final client = filteredClients[index];
-          return _buildClientCard(client);
-        },
-      ),
-    );
-  }
-
-  Widget _buildClientCard(Map<String, dynamic> client) {
-    final name = client['name'] ?? 'Unknown Client';
-    final domain = client['domain'] ?? 'No domain';
-    final schemaName = client['schema_name'] ?? '';
-    final orgType = client['organization_type'] ?? 'Unknown';
-    final accountType = client['account_type'] ?? '';
-    final city = client['address_city'] ?? '';
-    final state = client['address_state'] ?? '';
-    
-    String location = '';
-    if (city.isNotEmpty && state.isNotEmpty) {
-      location = '$city, $state';
-    } else if (city.isNotEmpty) {
-      location = city;
-    } else if (state.isNotEmpty) {
-      location = state;
-    }
-
-    return Card(
-      elevation: 0,
-      child: InkWell(
-        onTap: () => _showClientDetails(client),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF001b3f), Color(0xFF004aad)],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.business, color: Colors.white),
-                  ),
-                  const Spacer(),
-                  PopupMenuButton(
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showEditClientDialog(client);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                domain,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const Spacer(),
-              if (location.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-              ],
-              if (accountType.isNotEmpty)
-                Row(
-                  children: [
-                    Icon(Icons.category, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      accountType,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
