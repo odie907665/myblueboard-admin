@@ -21,14 +21,12 @@ class ApiService {
   }
 
   Map<String, String> _getHeaders({bool includeAuth = false}) {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    
+    final headers = {'Content-Type': 'application/json'};
+
     if (includeAuth && _accessToken != null) {
       headers['Authorization'] = 'Bearer $_accessToken';
     }
-    
+
     return headers;
   }
 
@@ -38,15 +36,12 @@ class ApiService {
       final response = await http.post(
         Uri.parse(ApiConfig.loginEndpoint),
         headers: _getHeaders(),
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-      
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
@@ -56,7 +51,10 @@ class ApiService {
         print('Login successful, tokens stored');
         return data;
       } else {
-        final errorMsg = data['errors']?.toString() ?? data['message']?.toString() ?? 'Login failed';
+        final errorMsg =
+            data['errors']?.toString() ??
+            data['message']?.toString() ??
+            'Login failed';
         print('Login failed: $errorMsg');
         throw Exception(errorMsg);
       }
@@ -72,9 +70,7 @@ class ApiService {
         await http.post(
           Uri.parse(ApiConfig.logoutEndpoint),
           headers: _getHeaders(includeAuth: true),
-          body: jsonEncode({
-            'refresh_token': _refreshToken,
-          }),
+          body: jsonEncode({'refresh_token': _refreshToken}),
         );
       }
     } finally {
@@ -110,7 +106,7 @@ class ApiService {
       );
 
       print('Dashboard stats response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -133,7 +129,7 @@ class ApiService {
       );
 
       print('Clients response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -155,7 +151,7 @@ class ApiService {
       );
 
       print('Client settings response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -177,7 +173,7 @@ class ApiService {
       );
 
       print('Client admins response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -192,7 +188,10 @@ class ApiService {
   }
 
   // Update Client
-  Future<bool> updateClient(String schemaName, Map<String, dynamic> clientData) async {
+  Future<bool> updateClient(
+    String schemaName,
+    Map<String, dynamic> clientData,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/update/'),
@@ -201,7 +200,7 @@ class ApiService {
       );
 
       print('Update client response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['success'] == true;
@@ -214,16 +213,21 @@ class ApiService {
   }
 
   // Update School
-  Future<bool> updateSchool(String schemaName, Map<String, dynamic> schoolData) async {
+  Future<bool> updateSchool(
+    String schemaName,
+    Map<String, dynamic> schoolData,
+  ) async {
     try {
       final response = await http.put(
-        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/school/update/'),
+        Uri.parse(
+          '${ApiConfig.adminApiBase}/clients/$schemaName/school/update/',
+        ),
         headers: _getHeaders(includeAuth: true),
         body: json.encode(schoolData),
       );
 
       print('Update school response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['success'] == true;
@@ -236,16 +240,21 @@ class ApiService {
   }
 
   // Update App Settings
-  Future<bool> updateAppSettings(String schemaName, Map<String, dynamic> settingsData) async {
+  Future<bool> updateAppSettings(
+    String schemaName,
+    Map<String, dynamic> settingsData,
+  ) async {
     try {
       final response = await http.put(
-        Uri.parse('${ApiConfig.adminApiBase}/clients/$schemaName/app-settings/update/'),
+        Uri.parse(
+          '${ApiConfig.adminApiBase}/clients/$schemaName/app-settings/update/',
+        ),
         headers: _getHeaders(includeAuth: true),
         body: json.encode(settingsData),
       );
 
       print('Update app settings response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['success'] == true;
@@ -253,6 +262,43 @@ class ApiService {
       return false;
     } catch (e) {
       print('Error updating app settings: $e');
+      return false;
+    }
+  }
+
+  // Send Email
+  Future<bool> sendEmail({
+    required List<String> toEmails,
+    required String subject,
+    required String body,
+    String? replyTo,
+    List<Map<String, String>>? attachments,
+  }) async {
+    try {
+      final emailData = {
+        'to_emails': toEmails,
+        'subject': subject,
+        'body': body,
+        if (replyTo != null) 'reply_to': replyTo,
+        if (attachments != null) 'attachments': attachments,
+      };
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.sendEmailEndpoint),
+        headers: _getHeaders(includeAuth: true),
+        body: json.encode(emailData),
+      );
+
+      print('Send email response: ${response.statusCode}');
+      print('Send email body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error sending email: $e');
       return false;
     }
   }

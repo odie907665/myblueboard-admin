@@ -5,7 +5,7 @@ enum Environment {
 
 class EnvironmentConfig {
   // Change this to switch between dev and prod
-  static const Environment current = Environment.prod;
+  static const Environment current = Environment.dev;
   
   static String get baseUrl {
     switch (current) {

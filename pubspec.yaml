@@ -46,6 +46,12 @@ dependencies:
   
   # Local storage for preferences
   shared_preferences: ^2.2.2
+  
+  # Biometric authentication
+  local_auth: ^2.1.7
+  
+  # File picker for attachments
+  file_picker: ^8.1.4
 
 dev_dependencies:
   flutter_test:

@@ -23,6 +23,7 @@ class AdminScaffold extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       drawer: isDesktop ? null : _buildDrawer(context, authProvider, user),
       body: Builder(
         builder: (scaffoldContext) => Row(
@@ -91,155 +92,167 @@ class AdminScaffold extends StatelessWidget {
                         ],
                       ),
                       child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 24 : 8,
-                        vertical: isDesktop ? 16 : 12,
-                      ),
-                      child: Row(
-                        children: [
-                          // Hamburger menu for mobile
-                          if (!isDesktop) ...[
-                            IconButton(
-                              icon: const Icon(Icons.menu),
-                              onPressed: () {
-                                Scaffold.of(scaffoldContext).openDrawer();
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 24 : 8,
+                          vertical: isDesktop ? 16 : 12,
+                        ),
+                        child: Row(
+                          children: [
+                            // Hamburger menu for mobile
+                            if (!isDesktop) ...[
+                              IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () {
+                                  Scaffold.of(scaffoldContext).openDrawer();
+                                },
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isDesktop ? null : 18,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Theme Toggle
+                            Consumer<ThemeProvider>(
+                              builder: (context, themeProvider, _) {
+                                return IconButton(
+                                  icon: Icon(
+                                    themeProvider.isDarkMode
+                                        ? Icons.light_mode
+                                        : Icons.dark_mode,
+                                  ),
+                                  onPressed: () => themeProvider.toggleTheme(),
+                                  tooltip: themeProvider.isDarkMode
+                                      ? 'Switch to Light Mode'
+                                      : 'Switch to Dark Mode',
+                                );
                               },
                             ),
-                            const SizedBox(width: 4),
-                          ],
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isDesktop ? null : 18,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        const Spacer(),
-                        // Theme Toggle
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, _) {
-                            return IconButton(
-                              icon: Icon(
-                                themeProvider.isDarkMode
-                                    ? Icons.light_mode
-                                    : Icons.dark_mode,
-                              ),
-                              onPressed: () => themeProvider.toggleTheme(),
-                              tooltip: themeProvider.isDarkMode
-                                  ? 'Switch to Light Mode'
-                                  : 'Switch to Dark Mode',
-                            );
-                          },
-                        ),
-                        if (isDesktop) ...[
-                          const SizedBox(width: 8),
-                          // User Profile Menu
-                          PopupMenuButton<String>(
-                            offset: const Offset(0, 50),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: const Color(0xFF004aad),
-                                  child: Text(
-                                    user?['email']?.toString().substring(0, 1).toUpperCase() ?? 'A',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
+                            if (isDesktop) ...[
+                              const SizedBox(width: 8),
+                              // User Profile Menu
+                              PopupMenuButton<String>(
+                                offset: const Offset(0, 50),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      user?['email']?.toString() ?? 'Admin',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                                    CircleAvatar(
+                                      backgroundColor: const Color(0xFF004aad),
+                                      child: Text(
+                                        user?['email']
+                                                ?.toString()
+                                                .substring(0, 1)
+                                                .toUpperCase() ??
+                                            'A',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                    Text(
-                                      user?['role']?.toString() ?? 'Administrator',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          user?['email']?.toString() ?? 'Admin',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        Text(
+                                          user?['role']?.toString() ??
+                                              'Administrator',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.arrow_drop_down),
                                   ],
                                 ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_drop_down),
-                              ],
-                            ),
-                            itemBuilder: (BuildContext context) => [
-                            const PopupMenuItem<String>(
-                              value: 'profile',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.person_outline),
-                                  SizedBox(width: 12),
-                                  Text('Profile'),
+                                itemBuilder: (BuildContext context) => [
+                                  const PopupMenuItem<String>(
+                                    value: 'profile',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.person_outline),
+                                        SizedBox(width: 12),
+                                        Text('Profile'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'settings',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.settings_outlined),
+                                        SizedBox(width: 12),
+                                        Text('Settings'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuDivider(),
+                                  const PopupMenuItem<String>(
+                                    value: 'logout',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.logout, color: Colors.red),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Logout',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
+                                onSelected: (String value) async {
+                                  if (value == 'logout') {
+                                    await authProvider.logout();
+                                    if (context.mounted) {
+                                      Navigator.of(
+                                        context,
+                                      ).pushReplacementNamed('/login');
+                                    }
+                                  } else if (value == 'settings') {
+                                    _navigateToScreen(context, 5);
+                                  } else if (value == 'profile') {
+                                    // TODO: Navigate to profile page
+                                  }
+                                },
                               ),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'settings',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.settings_outlined),
-                                  SizedBox(width: 12),
-                                  Text('Settings'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            const PopupMenuItem<String>(
-                              value: 'logout',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.logout, color: Colors.red),
-                                  SizedBox(width: 12),
-                                  Text('Logout', style: TextStyle(color: Colors.red)),
-                                ],
-                              ),
-                            ),
+                            ],
                           ],
-                          onSelected: (String value) async {
-                            if (value == 'logout') {
-                              await authProvider.logout();
-                              if (context.mounted) {
-                                Navigator.of(context).pushReplacementNamed('/login');
-                              }
-                            } else if (value == 'settings') {
-                              _navigateToScreen(context, 5);
-                            } else if (value == 'profile') {
-                              // TODO: Navigate to profile page
-                            }
-                          },
                         ),
-                      ],
-                      ],
+                      ),
                     ),
-                  ),
+                    // Content Area
+                    Expanded(
+                      child: Container(
+                        color: Theme.of(context).colorScheme.background,
+                        child: body,
+                      ),
+                    ),
+                  ],
                 ),
-                // Content Area
-                Expanded(
-                  child: Container(
-                    color: Theme.of(context).colorScheme.background,
-                    child: body,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -297,9 +310,9 @@ class AdminScaffold extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'myblueboard',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Container(
@@ -310,9 +323,7 @@ class AdminScaffold extends StatelessWidget {
                 : Colors.green.withOpacity(0.2),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: EnvironmentConfig.isDev
-                  ? Colors.orange
-                  : Colors.green,
+              color: EnvironmentConfig.isDev ? Colors.orange : Colors.green,
               width: 1,
             ),
           ),
@@ -321,9 +332,7 @@ class AdminScaffold extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: EnvironmentConfig.isDev
-                  ? Colors.orange
-                  : Colors.green,
+              color: EnvironmentConfig.isDev ? Colors.orange : Colors.green,
             ),
           ),
         ),
@@ -332,7 +341,11 @@ class AdminScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawer(BuildContext context, AuthProvider authProvider, Map<String, dynamic>? user) {
+  Widget _buildDrawer(
+    BuildContext context,
+    AuthProvider authProvider,
+    Map<String, dynamic>? user,
+  ) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -375,7 +388,10 @@ class AdminScaffold extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: EnvironmentConfig.isDev
                         ? Colors.orange.withOpacity(0.3)
@@ -394,10 +410,7 @@ class AdminScaffold extends StatelessWidget {
                 const Spacer(),
                 Text(
                   user?['email']?.toString() ?? 'Admin',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),

@@ -16,6 +16,52 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _enableBiometric = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricStatus();
+  }
+
+  Future<void> _checkBiometricStatus() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final available = await authProvider.isBiometricAvailable();
+    final enabled = await authProvider.isBiometricEnabled();
+
+    setState(() {
+      _biometricAvailable = available;
+      _biometricEnabled = enabled;
+    });
+
+    // If biometric is enabled, show biometric prompt
+    if (enabled && mounted) {
+      _handleBiometricLogin();
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    final success = await authProvider.loginWithBiometric();
+
+    if (mounted) {
+      if (success && authProvider.isAuthenticated) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      } else if (authProvider.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error!),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -27,19 +73,18 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       await authProvider.login(
         _emailController.text,
         _passwordController.text,
+        saveBiometric: _enableBiometric,
       );
 
       if (mounted) {
         if (authProvider.isAuthenticated) {
           // Navigate to dashboard
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
           );
         } else if (authProvider.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -79,10 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: Form(
                       key: _formKey,
@@ -103,33 +145,29 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           const SizedBox(height: 24),
-                          
-                          // Environment indicator
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: EnvironmentConfig.isDev 
-                                ? Colors.orange.withOpacity(0.2)
-                                : Colors.green.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: EnvironmentConfig.isDev 
-                                  ? Colors.orange
-                                  : Colors.green,
+
+                          // Environment indicator (hidden in production)
+                          if (EnvironmentConfig.isDev)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.orange),
+                              ),
+                              child: Text(
+                                '${EnvironmentConfig.environmentName} Environment',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange.shade700,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            child: Text(
-                              '${EnvironmentConfig.environmentName} Environment',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: EnvironmentConfig.isDev 
-                                  ? Colors.orange.shade700
-                                  : Colors.green.shade700,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
                           const SizedBox(height: 32),
 
                           // Email Field
@@ -139,7 +177,10 @@ class _LoginPageState extends State<LoginPage> {
                             style: const TextStyle(color: Colors.black87),
                             decoration: InputDecoration(
                               labelText: 'Email Address',
-                              prefixIcon: const Icon(Icons.email, color: Color(0xFF004aad)),
+                              prefixIcon: const Icon(
+                                Icons.email,
+                                color: Color(0xFF004aad),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -165,7 +206,10 @@ class _LoginPageState extends State<LoginPage> {
                             style: const TextStyle(color: Colors.black87),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock, color: Color(0xFF004aad)),
+                              prefixIcon: const Icon(
+                                Icons.lock,
+                                color: Color(0xFF004aad),
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _isPasswordVisible
@@ -197,9 +241,79 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 32),
 
+                          // Biometric toggle (only show if available and not already enabled)
+                          if (_biometricAvailable && !_biometricEnabled)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.fingerprint,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Enable Face ID / Touch ID',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: _enableBiometric,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _enableBiometric = value;
+                                      });
+                                    },
+                                    activeColor: Color(0xFF1e88e5),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (_biometricAvailable && !_biometricEnabled)
+                            const SizedBox(height: 20),
+
+                          // Biometric login button (only show if enabled)
+                          if (_biometricEnabled)
+                            OutlinedButton.icon(
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : _handleBiometricLogin,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: BorderSide(color: Colors.white, width: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.fingerprint, size: 24),
+                              label: const Text(
+                                'LOG IN WITH BIOMETRICS',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          if (_biometricEnabled) const SizedBox(height: 16),
+
                           // Login Button
                           ElevatedButton(
-                            onPressed: authProvider.isLoading ? null : _handleLogin,
+                            onPressed: authProvider.isLoading
+                                ? null
+                                : _handleLogin,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1e88e5),
                               foregroundColor: Colors.white,

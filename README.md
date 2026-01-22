@@ -17,5 +17,13 @@ samples, guidance on mobile development, and a full API reference.
 
 
 ### Test iOS Flutter App
-<code>flutter run -d "iPhone 17 Pro"</code>
 
+<code>flutter run -d "iPhone 17 Pro"</code>
+<code>flutter run -d macos</code>
+
+### Build Release for macos
+<code>flutter clean</code>
+<code>flutter build macos --release</code>
+
+### Deploy to iPhone 
+<code>cd /Users/patrickodonnell/Git/myblueboard-admin && flutter run --release -d judoPhone</code>

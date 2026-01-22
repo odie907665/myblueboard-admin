@@ -16,6 +16,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   List<Map<String, dynamic>> clients = [];
   List<Map<String, dynamic>> filteredClients = [];
   String? errorMessage;
+  bool showDevClients = false;
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       final clientsData = await _apiService.getClients();
       setState(() {
         clients = clientsData;
-        filteredClients = clientsData;
+        _applyClientFilter();
         isLoading = false;
       });
     } catch (e) {
@@ -50,22 +51,66 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
+  void _applyClientFilter() {
+    List<Map<String, dynamic>> baseClients;
+
+    if (showDevClients) {
+      // Show only acme* and signup* clients
+      baseClients = clients.where((client) {
+        final domain = client['domain']?.toString().toLowerCase() ?? '';
+        return domain.startsWith('acme') || domain.startsWith('signup');
+      }).toList();
+    } else {
+      // Show all clients except acme* and signup*
+      baseClients = clients.where((client) {
+        final domain = client['domain']?.toString().toLowerCase() ?? '';
+        return !domain.startsWith('acme') && !domain.startsWith('signup');
+      }).toList();
+    }
+
+    // Apply search filter on top of dev/regular filter
+    final query = _searchController.text;
+    if (query.isEmpty) {
+      filteredClients = baseClients;
+    } else {
+      filteredClients = baseClients.where((client) {
+        final name = client['name']?.toString().toLowerCase() ?? '';
+        final domain = client['domain']?.toString().toLowerCase() ?? '';
+        final schemaName =
+            client['schema_name']?.toString().toLowerCase() ?? '';
+        final searchLower = query.toLowerCase();
+
+        return name.contains(searchLower) ||
+            domain.contains(searchLower) ||
+            schemaName.contains(searchLower);
+      }).toList();
+    }
+  }
+
   void _filterClients(String query) {
     setState(() {
-      if (query.isEmpty) {
-        filteredClients = clients;
-      } else {
-        filteredClients = clients.where((client) {
-          final name = client['name']?.toString().toLowerCase() ?? '';
-          final domain = client['domain']?.toString().toLowerCase() ?? '';
-          final schemaName = client['schema_name']?.toString().toLowerCase() ?? '';
-          final searchLower = query.toLowerCase();
-          
-          return name.contains(searchLower) || 
-                 domain.contains(searchLower) ||
-                 schemaName.contains(searchLower);
-        }).toList();
-      }
+      _applyClientFilter();
+    });
+  }
+
+  int _getRegularClientsCount() {
+    return clients.where((client) {
+      final domain = client['domain']?.toString().toLowerCase() ?? '';
+      return !domain.startsWith('acme') && !domain.startsWith('signup');
+    }).length;
+  }
+
+  int _getDevClientsCount() {
+    return clients.where((client) {
+      final domain = client['domain']?.toString().toLowerCase() ?? '';
+      return domain.startsWith('acme') || domain.startsWith('signup');
+    }).length;
+  }
+
+  void _toggleDevMode(bool showDev) {
+    setState(() {
+      showDevClients = showDev;
+      _applyClientFilter();
     });
   }
 
@@ -77,30 +122,31 @@ class _ClientsScreenState extends State<ClientsScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
-              ? _buildErrorState()
-              : Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          ? _buildErrorState()
+          : Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with Actions
+                  Row(
                     children: [
-                      // Header with Actions
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: 'Search clients by name, domain, or schema...',
-                                prefixIcon: const Icon(Icons.search),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              onChanged: _filterClients,
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText:
+                                'Search clients by name, domain, or schema...',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            filled: true,
+                            fillColor: Colors.white,
                           ),
+                          onChanged: _filterClients,
+                        ),
+                      ),
                       const SizedBox(width: 16),
                       FilledButton.icon(
                         onPressed: _showAddClientDialog,
@@ -115,17 +161,28 @@ class _ClientsScreenState extends State<ClientsScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Stats Overview
                   Row(
                     children: [
-                      _buildStatChip(
+                      _buildStatButton(
                         'Total Clients',
-                        '${clients.length}',
+                        '${_getRegularClientsCount()}',
                         Icons.business,
                         const Color(0xFF004aad),
+                        !showDevClients,
+                        () => _toggleDevMode(false),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatButton(
+                        'Dev Clients',
+                        '${_getDevClientsCount()}',
+                        Icons.code,
+                        Colors.orange,
+                        showDevClients,
+                        () => _toggleDevMode(true),
                       ),
                       const SizedBox(width: 12),
                       _buildStatChip(
@@ -136,9 +193,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Clients View
                   Expanded(
                     child: filteredClients.isEmpty
@@ -151,7 +208,57 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _buildStatChip(String label, String value, IconData icon, Color color) {
+  Widget _buildStatButton(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(isSelected ? 1.0 : 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              '$label: ',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: isSelected ? Colors.white : Colors.grey[700],
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -172,10 +279,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           Text(
             value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: color),
           ),
         ],
       ),
@@ -226,9 +330,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
           const SizedBox(height: 16),
           Text(
             'No clients found',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -260,7 +364,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             final domain = client['domain'] ?? 'No domain';
             final city = client['address_city'] ?? '';
             final state = client['address_state'] ?? '';
-            
+
             String location = '';
             if (city.isNotEmpty && state.isNotEmpty) {
               location = '$city, $state';
@@ -279,7 +383,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.business, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.business,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               title: Text(
                 name,
@@ -374,10 +482,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   void _showClientDetails(Map<String, dynamic> client) {
-    Navigator.pushNamed(
-      context,
-      '/client-settings',
-      arguments: client,
-    );
+    Navigator.pushNamed(context, '/client-settings', arguments: client);
   }
 }

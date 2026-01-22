@@ -1,0 +1,55 @@
+Running `(cd /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/; ANDROID_HOME=/Users/patrickodonnell/Library/Android/sdk TMPDIR=/var/folders/xs/s9pczvn12q7g608xvv8sdp380000gn/T/ PATH=/Users/patrickodonnell/Library/Android/sdk/platform-tools:/Users/patrickodonnell/Library/Android/sdk/emulator:/opt/homebrew/opt/libpq/bin:/opt/homebrew/opt/ruby@2.7/bin:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/patrickodonnell/flutter/bin/:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/patrickodonnell/flutter/bin/:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/patrickodonnell/Library/Android/sdk/platform-tools:/Users/patrickodonnell/Library/Android/sdk/emulator:/opt/homebrew/opt/libpq/bin:/opt/homebrew/opt/ruby@2.7/bin:/Users/patrickodonnell/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts HOME=/Users/patrickodonnell /Users/patrickodonnell/flutter/bin/cache/dart-sdk/bin/dart --packages=/Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/package_config.json /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/objective_c/5f31b8d621e364a094b467a268c7b433/hook.dill --config=/Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/objective_c/5f31b8d621e364a094b467a268c7b433/input.json )`.
+INFO: 2026-01-22 13:54:40.586751: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-01-22 13:54:40.599398: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-01-22 13:54:40.612316: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/include/dart_api_dl.c -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-01-22 13:54:40.612633: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c.c -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.c.o
+
+INFO: 2026-01-22 13:54:40.612777: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/test/util.c -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/test/util.c.o
+
+INFO: 2026-01-22 13:54:40.612854: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/input_stream_adapter.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-01-22 13:54:40.613031: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.m.o
+
+INFO: 2026-01-22 13:54:40.613204: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/observer.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o
+
+INFO: 2026-01-22 13:54:40.613378: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/protocol.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o
+
+
+
+INFO: 2026-01-22 13:54:40.613450: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-01-22 13:54:40.641108: 
+INFO: 2026-01-22 13:54:40.641120: 
+INFO: 2026-01-22 13:54:40.641129: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-01-22 13:54:40.645714: 
+INFO: 2026-01-22 13:54:40.645747: 
+INFO: 2026-01-22 13:54:40.645757: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/test/util.c.o
+
+INFO: 2026-01-22 13:54:40.653911: 
+INFO: 2026-01-22 13:54:40.653939: 
+INFO: 2026-01-22 13:54:40.653950: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o
+
+INFO: 2026-01-22 13:54:40.654603: 
+INFO: 2026-01-22 13:54:40.654623: 
+INFO: 2026-01-22 13:54:40.654634: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o
+
+INFO: 2026-01-22 13:54:40.766111: 
+INFO: 2026-01-22 13:54:40.766121: 
+INFO: 2026-01-22 13:54:40.766128: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-01-22 13:54:40.769352: 
+INFO: 2026-01-22 13:54:40.769380: 
+INFO: 2026-01-22 13:54:40.769389: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/ns_number.m.o
+
+INFO: 2026-01-22 13:54:40.781822: 
+INFO: 2026-01-22 13:54:40.781852: 
+INFO: 2026-01-22 13:54:40.781871: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-01-22 13:54:40.782168: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -shared -undefined dynamic_lookup -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk -target x86_64-apple-darwin /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/include/dart_api_dl.c.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.c.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/test/util.c.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/ns_number.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c_bindings_generated.m.o -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/objective_c.dylib
+
+INFO: 2026-01-22 13:54:40.808966: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/objective_c.dylib
+

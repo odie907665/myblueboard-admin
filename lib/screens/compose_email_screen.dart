@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import '../widgets/admin_scaffold.dart';
+import '../services/api_service.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
 
 class ComposeEmailScreen extends StatefulWidget {
   final List<String> toEmails;
   final String? subject;
 
-  const ComposeEmailScreen({
-    super.key,
-    required this.toEmails,
-    this.subject,
-  });
+  const ComposeEmailScreen({super.key, required this.toEmails, this.subject});
 
   @override
   State<ComposeEmailScreen> createState() => _ComposeEmailScreenState();
@@ -20,7 +19,9 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _bodyController = TextEditingController();
+  final ApiService _apiService = ApiService();
   bool _isSending = false;
+  List<PlatformFile> _attachments = [];
 
   @override
   void initState() {
@@ -45,19 +46,55 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
     setState(() {
       _isSending = true;
     });
-    // Error Handling and Feedback
+
     try {
-      // TODO: Implement actual email sending logic via API
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      
+      // Parse email addresses from the to field
+      final toEmails = _toController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      // Prepare attachments
+      List<Map<String, String>>? attachmentData;
+      if (_attachments.isNotEmpty) {
+        attachmentData = [];
+        for (var file in _attachments) {
+          if (file.bytes != null) {
+            final base64Content = base64Encode(file.bytes!);
+            attachmentData.add({
+              'filename': file.name,
+              'content_base64': base64Content,
+            });
+          }
+        }
+      }
+
+      // Send email via API
+      final success = await _apiService.sendEmail(
+        toEmails: toEmails,
+        subject: _subjectController.text,
+        body: _bodyController.text,
+        attachments: attachmentData,
+      );
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email sent successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email sent successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to send email. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -75,6 +112,37 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
         });
       }
     }
+  }
+
+  Future<void> _pickFiles() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.any,
+        withData: true, // Important: This loads the file bytes
+      );
+
+      if (result != null) {
+        setState(() {
+          _attachments.addAll(result.files);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick files: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeAttachment(int index) {
+    setState(() {
+      _attachments.removeAt(index);
+    });
   }
 
   @override
@@ -146,7 +214,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Form content
                 Expanded(
                   child: Form(
@@ -170,25 +238,39 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                           TextFormField(
                             controller: _toController,
                             decoration: InputDecoration(
-                              hintText: 'Enter recipient email addresses (comma-separated)',
-                              prefixIcon: const Icon(Icons.people_outline, color: Color(0xFF004aad)),
+                              hintText:
+                                  'Enter recipient email addresses (comma-separated)',
+                              prefixIcon: const Icon(
+                                Icons.people_outline,
+                                color: Color(0xFF004aad),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF004aad), width: 2),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF004aad),
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                               contentPadding: const EdgeInsets.all(16),
                             ),
-                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
                             maxLines: 2,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
@@ -198,7 +280,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                             },
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Subject Field with modern styling
                           Text(
                             'Subject',
@@ -214,24 +296,37 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                             controller: _subjectController,
                             decoration: InputDecoration(
                               hintText: 'What is this email about?',
-                              prefixIcon: const Icon(Icons.subject_outlined, color: Color(0xFF004aad)),
+                              prefixIcon: const Icon(
+                                Icons.subject_outlined,
+                                color: Color(0xFF004aad),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF004aad), width: 2),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF004aad),
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                               contentPadding: const EdgeInsets.all(16),
                             ),
-                            style: const TextStyle(fontSize: 15, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Please enter a subject';
@@ -240,7 +335,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                             },
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Body Field with modern styling
                           Text(
                             'Message',
@@ -259,21 +354,32 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF004aad), width: 2),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF004aad),
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey[50],
                               contentPadding: const EdgeInsets.all(16),
                             ),
-                            style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.5,
+                              color: Colors.black87,
+                            ),
                             maxLines: 12,
                             minLines: 12,
                             textAlignVertical: TextAlignVertical.top,
@@ -284,15 +390,133 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                               return null;
                             },
                           ),
+                          const SizedBox(height: 24),
+
+                          // Attachments Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Attachments',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[300],
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: _pickFiles,
+                                icon: const Icon(Icons.attach_file, size: 18),
+                                label: const Text('Add Files'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF004aad),
+                                  side: const BorderSide(
+                                    color: Color(0xFF004aad),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Attachments List
+                          if (_attachments.isNotEmpty)
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[300]!),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _attachments.length,
+                                separatorBuilder: (context, index) =>
+                                    Divider(height: 1, color: Colors.grey[300]),
+                                itemBuilder: (context, index) {
+                                  final file = _attachments[index];
+                                  final sizeInKB = (file.size / 1024)
+                                      .toStringAsFixed(1);
+                                  return ListTile(
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFF004aad,
+                                        ).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.insert_drive_file,
+                                        color: Color(0xFF004aad),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      file.name,
+                                      style: const TextStyle(fontSize: 14),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: Text(
+                                      '$sizeInKB KB',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        size: 20,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () => _removeAttachment(index),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                border: Border.all(color: Colors.grey[300]!),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.attachment,
+                                    size: 18,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'No attachments',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                
+
                 // Modern Footer with actions
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 24,
+                    bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.light
                         ? Colors.grey[50]
@@ -312,7 +536,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isMobile = constraints.maxWidth < 600;
-                      
+
                       if (isMobile) {
                         // Mobile layout - stacked vertically
                         return Column(
@@ -321,7 +545,11 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                             // Info text
                             Row(
                               children: [
-                                Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -340,11 +568,15 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                               children: [
                                 Expanded(
                                   child: OutlinedButton.icon(
-                                    onPressed: _isSending ? null : () => Navigator.of(context).pop(),
+                                    onPressed: _isSending
+                                        ? null
+                                        : () => Navigator.of(context).pop(),
                                     icon: const Icon(Icons.close, size: 16),
                                     label: const Text('Cancel'),
                                     style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -362,15 +594,25 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                                             height: 16,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
                                             ),
                                           )
-                                        : const Icon(Icons.send_rounded, size: 16),
-                                    label: Text(_isSending ? 'Sending...' : 'Send'),
+                                        : const Icon(
+                                            Icons.send_rounded,
+                                            size: 16,
+                                          ),
+                                    label: Text(
+                                      _isSending ? 'Sending...' : 'Send',
+                                    ),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: const Color(0xFF004aad),
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -383,7 +625,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                           ],
                         );
                       }
-                      
+
                       // Desktop layout - horizontal
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -392,7 +634,11 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                           Expanded(
                             child: Row(
                               children: [
-                                Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -411,7 +657,9 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                           Row(
                             children: [
                               OutlinedButton.icon(
-                                onPressed: _isSending ? null : () => Navigator.of(context).pop(),
+                                onPressed: _isSending
+                                    ? null
+                                    : () => Navigator.of(context).pop(),
                                 icon: const Icon(Icons.close, size: 18),
                                 label: const Text('Cancel'),
                                 style: OutlinedButton.styleFrom(
@@ -433,11 +681,16 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                                         height: 18,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Icon(Icons.send_rounded, size: 18),
-                                label: Text(_isSending ? 'Sending...' : 'Send Email'),
+                                label: Text(
+                                  _isSending ? 'Sending...' : 'Send Email',
+                                ),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: const Color(0xFF004aad),
                                   foregroundColor: Colors.white,

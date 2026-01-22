@@ -1,0 +1,71 @@
+Running `(cd /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/; ANDROID_HOME=/Users/patrickodonnell/Library/Android/sdk TMPDIR=/var/folders/xs/s9pczvn12q7g608xvv8sdp380000gn/T/ PATH=/Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/Users/patrickodonnell/Library/Android/sdk/platform-tools:/Users/patrickodonnell/Library/Android/sdk/emulator:/opt/homebrew/opt/libpq/bin:/opt/homebrew/opt/ruby@2.7/bin:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/patrickodonnell/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/patrickodonnell/flutter/bin/:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Users/patrickodonnell/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts HOME=/Users/patrickodonnell /Users/patrickodonnell/flutter/bin/cache/dart-sdk/bin/dart --packages=/Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/package_config.json /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/objective_c/0b28f89409983829d6356966c2c3da83/hook.dill --config=/Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/objective_c/0b28f89409983829d6356966c2c3da83/input.json )`.
+INFO: 2026-01-22 14:05:48.819163: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-01-22 14:05:48.834641: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-01-22 14:05:48.848081: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/include/dart_api_dl.c -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-01-22 14:05:48.848420: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c.c -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.c.o
+
+INFO: 2026-01-22 14:05:48.848526: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/input_stream_adapter.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-01-22 14:05:48.848601: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.m.o
+
+INFO: 2026-01-22 14:05:48.848668: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/observer.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/observer.m.o
+
+INFO: 2026-01-22 14:05:48.848789: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/ns_number.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/ns_number.m.o
+
+INFO: 2026-01-22 14:05:48.848910: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios -x objective-c -fobjc-arc -c /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m -fpic -I src -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-01-22 14:05:48.879277: 
+INFO: 2026-01-22 14:05:48.879287: 
+INFO: 2026-01-22 14:05:48.879294: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.c.o
+
+dl.c.o
+
+INFO: 2026-01-22 14:05:48.888786: 
+INFO: 2026-01-22 14:05:48.888820: 
+INFO: 2026-01-22 14:05:48.888830: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/observer.m.o
+
+INFO: 2026-01-22 14:05:48.890028: 
+INFO: 2026-01-22 14:05:48.890042: 
+INFO: 2026-01-22 14:05:48.890052: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/protocol.m.o
+
+INFO: 2026-01-22 14:05:48.943653: 
+INFO: 2026-01-22 14:05:48.943684: 
+INFO: 2026-01-22 14:05:48.943693: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/ns_number.m.o
+INFO: 2026-01-22 14:05:48.948660: 
+INFO: 2026-01-22 14:05:48.948692: 
+INFO: 2026-01-22 14:05:48.948702: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.m.o
+INFO: 2026-01-22 14:05:48.948868: 
+INFO: 2026-01-22 14:05:48.948879: 
+INFO: 2026-01-22 14:05:48.948887: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/input_stream_adapter.m.o
+INFO: 2026-01-22 14:05:48.967056: 
+INFO: 2026-01-22 14:05:48.967089: /Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m:82:9: warning: 'NSItemProviderRepresentationVisibility' is only available on iOS 11.0 or newer [-Wunguarded-availability-new]
+   82 | typedef NSItemProviderRepresentationVisibility  (^_ProtocolTrampoline_1)(void * sel, id arg1);
+      |         ^
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSItemProvider.h:16:28: note: 'NSItemProviderRepresentationVisibility' has been marked as being introduced in iOS 11.0 here, but the deployment target is iOS 7.0.0
+   16 | typedef NS_ENUM(NSInteger, NSItemProviderRepresentationVisibility) {
+      |                            ^
+/Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m:82:51: note: annotate '_ProtocolTrampoline_1' with an availability attribute to silence this warning
+   82 | typedef NSItemProviderRepresentationVisibility  (^_ProtocolTrampoline_1)(void * sel, id arg1);
+      |                                                   ^
+/Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m:84:1: warning: 'NSItemProviderRepresentationVisibility' is only available on iOS 11.0 or newer [-Wunguarded-availability-new]
+   84 | NSItemProviderRepresentationVisibility  _1wx624s_protocolTrampoline_1ldqghh(id target, void * sel, id arg1) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSItemProvider.h:16:28: note: 'NSItemProviderRepresentationVisibility' has been marked as being introduced in iOS 11.0 here, but the deployment target is iOS 7.0.0
+   16 | typedef NS_ENUM(NSInteger, NSItemProviderRepresentationVisibility) {
+      |                            ^
+/Users/patrickodonnell/.pub-cache/hosted/pub.dev/objective_c-9.2.2/src/objective_c_bindings_generated.m:84:41: note: annotate '_1wx624s_protocolTrampoline_1ldqghh' with an availability attribute to silence this warning
+   83 | __attribute__((visibility("default"))) __attribute__((used))
+   84 | NSItemProviderRepresentationVisibility  _1wx624s_protocolTrampoline_1ldqghh(id target, void * sel, id arg1) {
+      |                                         ^
+2 warnings generated.
+
+INFO: 2026-01-22 14:05:48.967104: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c_bindings_generated.m.o
+INFO: 2026-01-22 14:05:48.967309: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -shared -undefined dynamic_lookup -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/include/dart_api_dl.c.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.c.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/input_stream_adapter.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/observer.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/ns_number.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/protocol.m.o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/obj/src/objective_c_bindings_generated.m.o -o /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/objective_c.dylib
+INFO: 2026-01-22 14:05:48.995453: 
+INFO: 2026-01-22 14:05:48.995514: ld: warning: -undefined dynamic_lookup is deprecated on iOS
+
+INFO: 2026-01-22 14:05:48.995530: Generated /Users/patrickodonnell/Git/myblueboard-admin/.dart_tool/hooks_runner/shared/objective_c/build/0b28f89409/objective_c.dylib
+

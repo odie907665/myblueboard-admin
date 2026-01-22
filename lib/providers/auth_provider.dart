@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/biometric_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+  final BiometricService _biometricService = BiometricService();
+
   bool _isAuthenticated = false;
   Map<String, dynamic>? _user;
   bool _isLoading = false;
@@ -16,7 +18,59 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> login(String email, String password) async {
+  // Check if biometric authentication is available
+  Future<bool> isBiometricAvailable() async {
+    return await _biometricService.isBiometricAvailable();
+  }
+
+  // Check if biometric login is enabled
+  Future<bool> isBiometricEnabled() async {
+    return await _biometricService.isBiometricEnabled();
+  }
+
+  // Attempt biometric login
+  Future<bool> loginWithBiometric() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Check if credentials are saved
+      final credentials = await _biometricService.getSavedCredentials();
+      if (credentials == null) {
+        _error = 'No saved credentials found';
+        return false;
+      }
+
+      // Authenticate with biometrics
+      final authenticated = await _biometricService.authenticate();
+      if (!authenticated) {
+        _error = 'Biometric authentication failed';
+        return false;
+      }
+
+      // Login with saved credentials
+      await login(
+        credentials['email']!,
+        credentials['password']!,
+        saveBiometric: false,
+      );
+      return _isAuthenticated;
+    } catch (e) {
+      print('AuthProvider: Biometric login error: $e');
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> login(
+    String email,
+    String password, {
+    bool saveBiometric = false,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -24,21 +78,28 @@ class AuthProvider extends ChangeNotifier {
     try {
       print('AuthProvider: Starting login...');
       final response = await _apiService.login(email, password);
-      
+
       print('AuthProvider: Login response received');
       print('AuthProvider: User data: ${response['user']}');
       print('AuthProvider: Has tokens: ${response['tokens'] != null}');
-      
+
       // Store tokens in memory
       _accessToken = response['tokens']['access'];
       _refreshToken = response['tokens']['refresh'];
       _apiService.setTokens(_accessToken!, _refreshToken!);
-      
+
       _user = response['user'];
       _isAuthenticated = true;
       _error = null;
-      
-      print('AuthProvider: Login successful, isAuthenticated = $_isAuthenticated');
+
+      // Save biometric credentials if requested
+      if (saveBiometric) {
+        await _biometricService.enableBiometric(email, password);
+      }
+
+      print(
+        'AuthProvider: Login successful, isAuthenticated = $_isAuthenticated',
+      );
     } catch (e) {
       print('AuthProvider: Login error: $e');
       _error = e.toString();
@@ -58,13 +119,21 @@ class AuthProvider extends ChangeNotifier {
       await _apiService.logout();
       _accessToken = null;
       _refreshToken = null;
-      
+
       _isAuthenticated = false;
       _user = null;
+
+      // Optionally clear biometric data on logout
+      // await _biometricService.disableBiometric();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Disable biometric authentication
+  Future<void> disableBiometric() async {
+    await _biometricService.disableBiometric();
   }
 
   Future<void> checkAuthStatus() async {
@@ -72,7 +141,7 @@ class AuthProvider extends ChangeNotifier {
     // This is fine for development
     if (_accessToken != null && _refreshToken != null) {
       _apiService.setTokens(_accessToken!, _refreshToken!);
-      
+
       try {
         final response = await _apiService.getProfile();
         _user = response['user'];
@@ -82,8 +151,7 @@ class AuthProvider extends ChangeNotifier {
         await logout();
       }
     }
-    
+
     notifyListeners();
   }
 }
-

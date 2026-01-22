@@ -16,7 +16,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'accounts': 0,
     'tickets': 0,
   };
-  
+
   bool isLoading = true;
   String? errorMessage;
 
@@ -35,10 +35,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final apiService = ApiService();
       final dashboardStats = await apiService.getDashboardStats();
-      
+
       if (dashboardStats != null) {
+        // Fetch clients to get accurate count excluding dev domains
+        final clients = await apiService.getClients();
+        final filteredClientsCount = clients.where((client) {
+          final domain = client['domain']?.toString().toLowerCase() ?? '';
+          return !domain.startsWith('acme') && !domain.startsWith('signup');
+        }).length;
+
         setState(() {
           stats = dashboardStats;
+          stats['clients'] =
+              filteredClientsCount; // Override with filtered count
           isLoading = false;
         });
       } else {
@@ -59,115 +68,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 600;
     final crossAxisCount = isDesktop ? 4 : 2;
-    
+
     return AdminScaffold(
       title: 'Dashboard',
       selectedIndex: 0,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                      const SizedBox(height: 16),
-                      Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _loadDashboardData,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(color: Colors.red),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadDashboardData,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.all(isDesktop ? 24 : 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _loadDashboardData,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadDashboardData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(isDesktop ? 24 : 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Stats Cards Grid
+                    GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: isDesktop ? 1.8 : 1.3,
                       children: [
-                        // Stats Cards Grid
-                        GridView.count(
-                          crossAxisCount: crossAxisCount,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: isDesktop ? 1.8 : 1.3,
-                          children: [
-                            _buildStatCard(
-                              context,
-                              'Clients',
-                              stats['clients'].toString(),
-                              Icons.business,
-                              const Color(0xFF004aad),
-                              '+12%',
-                              isDesktop,
-                            ),
-                            _buildStatCard(
-                              context,
-                              'Users',
-                              stats['users'].toString(),
-                              Icons.people,
-                              Colors.green,
-                              '+8%',
-                              isDesktop,
-                            ),
-                            _buildStatCard(
-                              context,
-                              'Accounts',
-                              stats['accounts'].toString(),
-                              Icons.account_balance,
-                              Colors.orange,
-                              '+5%',
-                              isDesktop,
-                            ),
-                            _buildStatCard(
-                              context,
-                              'Tickets',
-                              stats['tickets'].toString(),
-                              Icons.confirmation_number,
-                              Colors.purple,
-                              '-3%',
-                              isDesktop,
-                            ),
-                          ],
+                        _buildStatCard(
+                          context,
+                          'Clients',
+                          stats['clients'].toString(),
+                          Icons.business,
+                          const Color(0xFF004aad),
+                          '+12%',
+                          isDesktop,
                         ),
-                        
-                        SizedBox(height: isDesktop ? 32 : 24),
-                        
-                        // Quick Actions and Recent Activity
-                        isDesktop
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Quick Actions
-                                  Expanded(
-                                    flex: 2,
-                                    child: _buildQuickActionsCard(context, isDesktop),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  // Recent Activity
-                                  Expanded(
-                                    child: _buildRecentActivityCard(context, isDesktop),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  _buildQuickActionsCard(context, isDesktop),
-                                  const SizedBox(height: 16),
-                                  _buildRecentActivityCard(context, isDesktop),
-                                ],
-                              ),
+                        _buildStatCard(
+                          context,
+                          'Users',
+                          stats['users'].toString(),
+                          Icons.people,
+                          Colors.green,
+                          '+8%',
+                          isDesktop,
+                        ),
+                        _buildStatCard(
+                          context,
+                          'Accounts',
+                          stats['accounts'].toString(),
+                          Icons.account_balance,
+                          Colors.orange,
+                          '+5%',
+                          isDesktop,
+                        ),
+                        _buildStatCard(
+                          context,
+                          'Tickets',
+                          stats['tickets'].toString(),
+                          Icons.confirmation_number,
+                          Colors.purple,
+                          '-3%',
+                          isDesktop,
+                        ),
                       ],
                     ),
-                  ),
+
+                    SizedBox(height: isDesktop ? 32 : 24),
+
+                    // Quick Actions and Recent Activity
+                    isDesktop
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Quick Actions
+                              Expanded(
+                                flex: 2,
+                                child: _buildQuickActionsCard(
+                                  context,
+                                  isDesktop,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Recent Activity
+                              Expanded(
+                                child: _buildRecentActivityCard(
+                                  context,
+                                  isDesktop,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              _buildQuickActionsCard(context, isDesktop),
+                              const SizedBox(height: 16),
+                              _buildRecentActivityCard(context, isDesktop),
+                            ],
+                          ),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 
@@ -182,9 +200,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               'Quick Actions',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isDesktop ? null : 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: isDesktop ? null : 18,
+              ),
             ),
             const SizedBox(height: 16),
             _buildQuickAction(
@@ -245,9 +263,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               'Recent Activity',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isDesktop ? null : 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: isDesktop ? null : 18,
+              ),
             ),
             const SizedBox(height: 16),
             _buildActivityItem(
@@ -303,17 +321,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final availableWidth = constraints.maxWidth;
-          final iconSize = availableWidth < 120 ? 18.0 : (isDesktop ? 24.0 : 20.0);
-          final valueFontSize = availableWidth < 120 ? 20.0 : (isDesktop ? 32.0 : 24.0);
-          
+          final iconSize = availableWidth < 120
+              ? 18.0
+              : (isDesktop ? 24.0 : 20.0);
+          final valueFontSize = availableWidth < 120
+              ? 20.0
+              : (isDesktop ? 32.0 : 24.0);
+
           return ClipRect(
             child: Padding(
-              padding: EdgeInsets.all(availableWidth < 120 ? 8 : (isDesktop ? 16 : 12)),
+              padding: EdgeInsets.all(
+                availableWidth < 120 ? 8 : (isDesktop ? 16 : 12),
+              ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
-                  width: availableWidth - (availableWidth < 120 ? 16 : (isDesktop ? 32 : 24)),
+                  width:
+                      availableWidth -
+                      (availableWidth < 120 ? 16 : (isDesktop ? 32 : 24)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -321,7 +347,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: EdgeInsets.all(availableWidth < 120 ? 6 : (isDesktop ? 10 : 8)),
+                            padding: EdgeInsets.all(
+                              availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                            ),
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -331,7 +359,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const Spacer(),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: availableWidth < 120 ? 4 : (isDesktop ? 8 : 6),
+                              horizontal: availableWidth < 120
+                                  ? 4
+                                  : (isDesktop ? 8 : 6),
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
@@ -343,7 +373,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Text(
                               trend,
                               style: TextStyle(
-                                fontSize: availableWidth < 120 ? 9 : (isDesktop ? 12 : 10),
+                                fontSize: availableWidth < 120
+                                    ? 9
+                                    : (isDesktop ? 12 : 10),
                                 fontWeight: FontWeight.bold,
                                 color: isPositive ? Colors.green : Colors.red,
                               ),
@@ -351,7 +383,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: availableWidth < 120 ? 8 : (isDesktop ? 16 : 12)),
+                      SizedBox(
+                        height: availableWidth < 120
+                            ? 8
+                            : (isDesktop ? 16 : 12),
+                      ),
                       Text(
                         value,
                         style: TextStyle(
@@ -364,7 +400,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         title,
                         style: TextStyle(
                           color: Colors.grey[600],
-                          fontSize: availableWidth < 120 ? 11 : (isDesktop ? 14 : 12),
+                          fontSize: availableWidth < 120
+                              ? 11
+                              : (isDesktop ? 14 : 12),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -418,10 +456,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
@@ -468,10 +503,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               Text(
                 time,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
