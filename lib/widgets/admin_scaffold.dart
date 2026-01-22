@@ -23,7 +23,7 @@ class AdminScaffold extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       drawer: isDesktop ? null : _buildDrawer(context, authProvider, user),
       body: Builder(
         builder: (scaffoldContext) => Row(
