@@ -3,6 +3,7 @@ import '../widgets/admin_scaffold.dart';
 import '../services/api_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
+import 'package:flutter_quill/flutter_quill.dart';
 
 class ComposeEmailScreen extends StatefulWidget {
   final List<String> toEmails;
@@ -18,7 +19,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _toController = TextEditingController();
   final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _bodyController = TextEditingController();
+  late QuillController _quillController;
   final ApiService _apiService = ApiService();
   bool _isSending = false;
   List<PlatformFile> _attachments = [];
@@ -28,13 +29,14 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
     super.initState();
     _toController.text = widget.toEmails.join(', ');
     _subjectController.text = widget.subject ?? '';
+    _quillController = QuillController.basic();
   }
 
   @override
   void dispose() {
     _toController.dispose();
     _subjectController.dispose();
-    _bodyController.dispose();
+    _quillController.dispose();
     super.dispose();
   }
 
@@ -70,11 +72,30 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
         }
       }
 
+      // Convert Quill content to HTML
+      final htmlBody = _quillController.document.toPlainText().isNotEmpty
+          ? _convertQuillToHtml(_quillController.document)
+          : '';
+
+      // Validate body content
+      if (htmlBody.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a message'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isSending = false;
+        });
+        return;
+      }
+
       // Send email via API
       final success = await _apiService.sendEmail(
         toEmails: toEmails,
         subject: _subjectController.text,
-        body: _bodyController.text,
+        body: htmlBody,
         attachments: attachmentData,
       );
 
@@ -112,6 +133,34 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
         });
       }
     }
+  }
+
+  String _convertQuillToHtml(Document document) {
+    // Get plain text and convert newlines to HTML paragraphs
+    final plainText = document.toPlainText();
+
+    if (plainText.trim().isEmpty) {
+      return '';
+    }
+
+    // Split by newlines and wrap each line in a paragraph
+    final lines = plainText.split('\n');
+    final buffer = StringBuffer();
+
+    for (final line in lines) {
+      if (line.trim().isEmpty) {
+        buffer.write('<p><br></p>');
+      } else {
+        // Escape HTML special characters
+        final escapedLine = line
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;');
+        buffer.write('<p>$escapedLine</p>');
+      }
+    }
+
+    return buffer.toString();
   }
 
   Future<void> _pickFiles() async {
@@ -340,7 +389,7 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Body Field with modern styling
+                            // Body Field with rich text editor
                             Text(
                               'Message',
                               style: TextStyle(
@@ -351,48 +400,62 @@ class _ComposeEmailScreenState extends State<ComposeEmailScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _bodyController,
-                              decoration: InputDecoration(
-                                hintText: 'Type your message here...',
-                                alignLabelWithHint: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF004aad),
-                                    width: 2,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.grey[50],
-                                contentPadding: const EdgeInsets.all(16),
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[300]!),
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.grey[50],
                               ),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                height: 1.5,
-                                color: Colors.black87,
+                              child: Column(
+                                children: [
+                                  // Toolbar
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(12),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                      ),
+                                    ),
+                                    child: QuillSimpleToolbar(
+                                      controller: _quillController,
+                                      config: const QuillSimpleToolbarConfig(
+                                        buttonOptions:
+                                            QuillSimpleToolbarButtonOptions(
+                                              base:
+                                                  QuillToolbarBaseButtonOptions(
+                                                    iconTheme: QuillIconTheme(
+                                                      iconButtonUnselectedData:
+                                                          IconButtonData(
+                                                            color: Colors.black,
+                                                          ),
+                                                      iconButtonSelectedData:
+                                                          IconButtonData(
+                                                            color: Color(
+                                                              0xFF004aad,
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  ),
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Editor
+                                  Container(
+                                    height: 300,
+                                    padding: const EdgeInsets.all(16),
+                                    child: QuillEditor.basic(
+                                      controller: _quillController,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              maxLines: 12,
-                              minLines: 12,
-                              textAlignVertical: TextAlignVertical.top,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter a message';
-                                }
-                                return null;
-                              },
                             ),
                             const SizedBox(height: 24),
 

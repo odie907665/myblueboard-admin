@@ -52,6 +52,9 @@ dependencies:
   
   # File picker for attachments
   file_picker: ^8.1.4
+  
+  # Rich text editor
+  flutter_quill: ^11.5.0
 
 dev_dependencies:
   flutter_test:

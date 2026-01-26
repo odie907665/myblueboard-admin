@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
 import 'config/environment.dart';
@@ -26,12 +28,19 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
           return MaterialApp(
-            title: EnvironmentConfig.isProd 
-                ? 'myblueboard Admin' 
+            title: EnvironmentConfig.isProd
+                ? 'myblueboard Admin'
                 : 'myblueboard Admin - ${EnvironmentConfig.environmentName}',
             theme: ThemeProvider.lightTheme,
             darkTheme: ThemeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              FlutterQuillLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en', 'US')],
             onGenerateRoute: (settings) {
               if (settings.name == '/client-settings') {
                 final client = settings.arguments as Map<String, dynamic>;
@@ -44,20 +53,23 @@ class MyApp extends StatelessWidget {
             initialRoute: '/',
             routes: {
               '/': (context) => Consumer<AuthProvider>(
-                    builder: (context, authProvider, _) {
-                      if (authProvider.isAuthenticated) {
-                        return const DashboardScreen();
-                      }
-                      return const LoginPage();
-                    },
-                  ),
+                builder: (context, authProvider, _) {
+                  if (authProvider.isAuthenticated) {
+                    return const DashboardScreen();
+                  }
+                  return const LoginPage();
+                },
+              ),
               '/login': (context) => const LoginPage(),
               '/dashboard': (context) => const DashboardScreen(),
               '/users': (context) => const UsersScreen(),
               '/clients': (context) => const ClientsScreen(),
-              '/accounts': (context) => const PlaceholderScreen(title: 'Accounts'),
-              '/tickets': (context) => const PlaceholderScreen(title: 'Tickets'),
-              '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
+              '/accounts': (context) =>
+                  const PlaceholderScreen(title: 'Accounts'),
+              '/tickets': (context) =>
+                  const PlaceholderScreen(title: 'Tickets'),
+              '/settings': (context) =>
+                  const PlaceholderScreen(title: 'Settings'),
             },
           );
         },

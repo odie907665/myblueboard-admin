@@ -15,6 +15,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'users': 0,
     'accounts': 0,
     'tickets': 0,
+    'clients_30_days': 0,
+    'clients_30_60_days': 0,
   };
 
   bool isLoading = true;
@@ -28,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     try {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
         errorMessage = null;
@@ -39,24 +42,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (dashboardStats != null) {
         // Fetch clients to get accurate count excluding dev domains
         final clients = await apiService.getClients();
-        final filteredClientsCount = clients.where((client) {
+
+        // Filter out dev clients
+        final filteredClients = clients.where((client) {
           final domain = client['domain']?.toString().toLowerCase() ?? '';
           return !domain.startsWith('acme') && !domain.startsWith('signup');
-        }).length;
+        }).toList();
 
+        // Load settings for each client to get renewal dates
+        int clients30Days = 0;
+        int clients30To60Days = 0;
+
+        for (var client in filteredClients) {
+          try {
+            final settings = await apiService.getClientSettings(
+              client['schema_name'],
+            );
+            if (settings != null && settings['settings'] != null) {
+              final renewDateStr = settings['settings']['renew_date'];
+              if (renewDateStr != null && renewDateStr.toString().isNotEmpty) {
+                try {
+                  final renewalDate = DateTime.parse(renewDateStr.toString());
+                  final now = DateTime.now();
+                  final today = DateTime(now.year, now.month, now.day);
+                  final renewal = DateTime(
+                    renewalDate.year,
+                    renewalDate.month,
+                    renewalDate.day,
+                  );
+                  final daysUntilRenewal = renewal.difference(today).inDays;
+
+                  if (daysUntilRenewal <= 30) {
+                    clients30Days++;
+                  } else if (daysUntilRenewal <= 60) {
+                    clients30To60Days++;
+                  }
+                } catch (e) {
+                  // Invalid date format, skip
+                }
+              }
+            }
+          } catch (e) {
+            // Skip clients with errors
+          }
+        }
+
+        if (!mounted) return;
         setState(() {
           stats = dashboardStats;
-          stats['clients'] =
-              filteredClientsCount; // Override with filtered count
+          stats['clients'] = filteredClients.length;
+          stats['clients_30_days'] = clients30Days;
+          stats['clients_30_60_days'] = clients30To60Days;
           isLoading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           errorMessage = 'Failed to load dashboard data';
           isLoading = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         errorMessage = 'Error: $e';
         isLoading = false;
@@ -120,13 +167,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           '+12%',
                           isDesktop,
                         ),
-                        _buildStatCard(
+                        _buildRenewalStatCard(
                           context,
-                          'Users',
-                          stats['users'].toString(),
-                          Icons.people,
+                          'Renewals',
+                          stats['clients_30_days'],
+                          stats['clients_30_60_days'],
+                          Icons.calendar_today,
                           Colors.green,
-                          '+8%',
                           isDesktop,
                         ),
                         _buildStatCard(
@@ -410,6 +457,128 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRenewalStatCard(
+    BuildContext context,
+    String title,
+    int clients30Days,
+    int clients30To60Days,
+    IconData icon,
+    Color color,
+    bool isDesktop,
+  ) {
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.hardEdge,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableWidth = constraints.maxWidth;
+          final iconSize = availableWidth < 120
+              ? 18.0
+              : (isDesktop ? 24.0 : 20.0);
+
+          return ClipRect(
+            child: Padding(
+              padding: EdgeInsets.all(
+                availableWidth < 120 ? 8 : (isDesktop ? 16 : 12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(
+                          availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(icon, color: color, size: iconSize),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: availableWidth < 120 ? 8 : (isDesktop ? 12 : 10),
+                  ),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: availableWidth < 120
+                          ? 11
+                          : (isDesktop ? 14 : 12),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$clients30Days',
+                              style: TextStyle(
+                                fontSize: availableWidth < 120
+                                    ? 18
+                                    : (isDesktop ? 24 : 20),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                            Text(
+                              '≤30 days',
+                              style: TextStyle(
+                                fontSize: availableWidth < 120
+                                    ? 9
+                                    : (isDesktop ? 11 : 10),
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$clients30To60Days',
+                              style: TextStyle(
+                                fontSize: availableWidth < 120
+                                    ? 18
+                                    : (isDesktop ? 24 : 20),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            Text(
+                              '31-60 days',
+                              style: TextStyle(
+                                fontSize: availableWidth < 120
+                                    ? 9
+                                    : (isDesktop ? 11 : 10),
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           );

@@ -246,16 +246,31 @@ class _ClientSettingsScreenState extends State<ClientSettingsScreen> {
               currentClientData['account_type'] ?? '',
             ),
             const SizedBox(height: 16),
-            // Button to fetch and display admin users
-            FilledButton.icon(
-              onPressed: _showAdminsDialog,
-              icon: const Icon(Icons.admin_panel_settings),
-              label: const Text('Get Admins'),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF004aad),
-                foregroundColor:
-                    Colors.white, // Ensures white text in both themes
-              ),
+            // Buttons to fetch and email admin users
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                FilledButton.icon(
+                  onPressed: _showAdminsDialog,
+                  icon: const Icon(Icons.admin_panel_settings),
+                  label: const Text('Get Admins'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF004aad),
+                    foregroundColor:
+                        Colors.white, // Ensures white text in both themes
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: _emailAdmins,
+                  icon: const Icon(Icons.email),
+                  label: const Text('Email Admins'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF004aad),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -960,6 +975,83 @@ class _ClientSettingsScreenState extends State<ClientSettingsScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if it's still open
+      if (mounted) Navigator.of(context).pop();
+
+      // Show error dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text('Failed to load admins: ${e.toString()}'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  void _emailAdmins() async {
+    // Show loading dialog first
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final admins = await _apiService.getClientAdmins(
+        currentClientData['schema_name'],
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (admins == null || admins.isEmpty) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('No Admins Found'),
+              content: const Text(
+                'No users with Admin Access were found for this client.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
+      // Extract email addresses from admins
+      final emailAddresses = admins
+          .map((admin) => admin['email']?.toString() ?? '')
+          .where((email) => email.isNotEmpty)
+          .toList();
+
+      // Navigate to compose email screen
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ComposeEmailScreen(
+              toEmails: emailAddresses,
+              subject: 'Message to ${currentClientData['name']} Admins',
             ),
           ),
         );

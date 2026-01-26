@@ -38,6 +38,24 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     try {
       final clientsData = await _apiService.getClients();
+
+      // Fetch settings for each client to get subscription info
+      for (var client in clientsData) {
+        try {
+          final settings = await _apiService.getClientSettings(
+            client['schema_name'],
+          );
+          if (settings != null && settings['settings'] != null) {
+            client['subscription_type'] =
+                settings['settings']['subscription_type'];
+            client['renew_date'] = settings['settings']['renew_date'];
+          }
+        } catch (e) {
+          print('Error fetching settings for ${client['schema_name']}: $e');
+          // Continue with other clients even if one fails
+        }
+      }
+
       setState(() {
         clients = clientsData;
         _applyClientFilter();
@@ -165,33 +183,36 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   const SizedBox(height: 24),
 
                   // Stats Overview
-                  Row(
-                    children: [
-                      _buildStatButton(
-                        'Total Clients',
-                        '${_getRegularClientsCount()}',
-                        Icons.business,
-                        const Color(0xFF004aad),
-                        !showDevClients,
-                        () => _toggleDevMode(false),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatButton(
-                        'Dev Clients',
-                        '${_getDevClientsCount()}',
-                        Icons.code,
-                        Colors.orange,
-                        showDevClients,
-                        () => _toggleDevMode(true),
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatChip(
-                        'Filtered',
-                        '${filteredClients.length}',
-                        Icons.filter_list,
-                        Colors.green,
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildStatButton(
+                          'Total Clients',
+                          '${_getRegularClientsCount()}',
+                          Icons.business,
+                          const Color(0xFF004aad),
+                          !showDevClients,
+                          () => _toggleDevMode(false),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildStatButton(
+                          'Dev Clients',
+                          '${_getDevClientsCount()}',
+                          Icons.code,
+                          Colors.orange,
+                          showDevClients,
+                          () => _toggleDevMode(true),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildStatChip(
+                          'Filtered',
+                          '${filteredClients.length}',
+                          Icons.filter_list,
+                          Colors.green,
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 24),
@@ -364,6 +385,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             final domain = client['domain'] ?? 'No domain';
             final city = client['address_city'] ?? '';
             final state = client['address_state'] ?? '';
+            final subscriptionType = client['subscription_type'] ?? 'N/A';
+            final renewalDateStr = client['renew_date'];
 
             String location = '';
             if (city.isNotEmpty && state.isNotEmpty) {
@@ -374,37 +397,173 @@ class _ClientsScreenState extends State<ClientsScreen> {
               location = state;
             }
 
-            return ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF001b3f), Color(0xFF004aad)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.business,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              title: Text(
-                name,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(domain),
-                  if (location.isNotEmpty)
-                    Text(
-                      location,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                    ),
-                ],
-              ),
+            // Calculate days until renewal
+            int? daysUntilRenewal;
+            Color countdownColor = Colors.green;
+            String renewalDisplay = 'N/A';
+
+            if (renewalDateStr != null &&
+                renewalDateStr.toString().isNotEmpty) {
+              try {
+                final renewalDate = DateTime.parse(renewalDateStr.toString());
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final renewal = DateTime(
+                  renewalDate.year,
+                  renewalDate.month,
+                  renewalDate.day,
+                );
+                daysUntilRenewal = renewal.difference(today).inDays;
+
+                // Format renewal date
+                renewalDisplay =
+                    '${renewalDate.month}/${renewalDate.day}/${renewalDate.year}';
+
+                // Color coding based on days until renewal
+                if (daysUntilRenewal <= 30) {
+                  countdownColor = Colors.red;
+                } else if (daysUntilRenewal <= 60) {
+                  countdownColor = Colors.orange;
+                } else {
+                  countdownColor = Colors.green;
+                }
+              } catch (e) {
+                // Invalid date format
+              }
+            }
+
+            return InkWell(
               onTap: () => _showClientDetails(client),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    // Leading icon
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF001b3f), Color(0xFF004aad)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.business,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            domain,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.card_membership,
+                                size: 14,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                subscriptionType,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 14,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                renewalDisplay,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (location.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              location,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    // Trailing countdown
+                    if (daysUntilRenewal != null) ...[
+                      const SizedBox(width: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: countdownColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: countdownColor, width: 2),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              daysUntilRenewal < 0
+                                  ? '${daysUntilRenewal.abs()}'
+                                  : '$daysUntilRenewal',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: countdownColor,
+                              ),
+                            ),
+                            Text(
+                              daysUntilRenewal < 0 ? 'days\noverdue' : 'days',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: countdownColor,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             );
           },
         ),
