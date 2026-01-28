@@ -28,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadDashboardData();
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> _loadDashboardData({bool forceRefresh = false}) async {
     try {
       if (!mounted) return;
       setState(() {
@@ -37,64 +37,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
 
       final apiService = ApiService();
-      final dashboardStats = await apiService.getDashboardStats();
+      final dashboardStats = await apiService.getDashboardStats(
+        forceRefresh: forceRefresh,
+      );
 
-      if (dashboardStats != null) {
-        // Fetch clients to get accurate count excluding dev domains
-        final clients = await apiService.getClients();
-
-        // Filter out dev clients
-        final filteredClients = clients.where((client) {
-          final domain = client['domain']?.toString().toLowerCase() ?? '';
-          return !domain.startsWith('acme') && !domain.startsWith('signup');
-        }).toList();
-
-        // Load settings for each client to get renewal dates
-        int clients30Days = 0;
-        int clients30To60Days = 0;
-
-        for (var client in filteredClients) {
-          try {
-            final settings = await apiService.getClientSettings(
-              client['schema_name'],
-            );
-            if (settings != null && settings['settings'] != null) {
-              final renewDateStr = settings['settings']['renew_date'];
-              if (renewDateStr != null && renewDateStr.toString().isNotEmpty) {
-                try {
-                  final renewalDate = DateTime.parse(renewDateStr.toString());
-                  final now = DateTime.now();
-                  final today = DateTime(now.year, now.month, now.day);
-                  final renewal = DateTime(
-                    renewalDate.year,
-                    renewalDate.month,
-                    renewalDate.day,
-                  );
-                  final daysUntilRenewal = renewal.difference(today).inDays;
-
-                  if (daysUntilRenewal <= 30) {
-                    clients30Days++;
-                  } else if (daysUntilRenewal <= 60) {
-                    clients30To60Days++;
-                  }
-                } catch (e) {
-                  // Invalid date format, skip
-                }
-              }
-            }
-          } catch (e) {
-            // Skip clients with errors
-          }
-        }
-
+      if (dashboardStats != null && dashboardStats['success'] == true) {
         if (!mounted) return;
-        setState(() {
-          stats = dashboardStats;
-          stats['clients'] = filteredClients.length;
-          stats['clients_30_days'] = clients30Days;
-          stats['clients_30_60_days'] = clients30To60Days;
-          isLoading = false;
-        });
+        final statsData = dashboardStats['stats'] as Map<String, dynamic>?;
+        if (statsData != null) {
+          setState(() {
+            stats = {
+              'clients': statsData['clients'] ?? 0,
+              'users': statsData['users'] ?? 0,
+              'accounts': statsData['accounts'] ?? 0,
+              'tickets': statsData['tickets'] ?? 0,
+              'clients_30_days': statsData['clients_30_days'] ?? 0,
+              'clients_30_60_days': statsData['clients_30_60_days'] ?? 0,
+            };
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            errorMessage = 'Invalid dashboard data format';
+            isLoading = false;
+          });
+        }
       } else {
         if (!mounted) return;
         setState(() {
@@ -119,6 +86,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return AdminScaffold(
       title: 'Dashboard',
       selectedIndex: 0,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: isLoading
+              ? null
+              : () => _loadDashboardData(forceRefresh: true),
+          tooltip: 'Refresh Dashboard',
+        ),
+      ],
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
@@ -170,8 +146,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildRenewalStatCard(
                           context,
                           'Renewals',
-                          stats['clients_30_days'],
-                          stats['clients_30_60_days'],
+                          stats['clients_30_days'] ?? 0,
+                          stats['clients_30_60_days'] ?? 0,
                           Icons.calendar_today,
                           Colors.green,
                           isDesktop,
@@ -487,98 +463,115 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return ClipRect(
             child: Padding(
               padding: EdgeInsets.all(
-                availableWidth < 120 ? 8 : (isDesktop ? 16 : 12),
+                availableWidth < 120 ? 4 : (isDesktop ? 12 : 8),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: availableWidth - (availableWidth < 120 ? 8 : (isDesktop ? 24 : 16)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(
-                          availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(
+                              availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(icon, color: color, size: iconSize),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                      ),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: availableWidth < 120
+                              ? 11
+                              : (isDesktop ? 14 : 12),
+                          fontWeight: FontWeight.w500,
                         ),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(icon, color: color, size: iconSize),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '$clients30Days',
+                                  style: TextStyle(
+                                    fontSize: availableWidth < 120
+                                        ? 18
+                                        : (isDesktop ? 24 : 20),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                                Text(
+                                  '≤30 days',
+                                  style: TextStyle(
+                                    fontSize: availableWidth < 120
+                                        ? 9
+                                        : (isDesktop ? 11 : 10),
+                                    color: Colors.grey[600],
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '$clients30To60Days',
+                                  style: TextStyle(
+                                    fontSize: availableWidth < 120
+                                        ? 18
+                                        : (isDesktop ? 24 : 20),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                                Text(
+                                  '31-60 days',
+                                  style: TextStyle(
+                                    fontSize: availableWidth < 120
+                                        ? 9
+                                        : (isDesktop ? 11 : 10),
+                                    color: Colors.grey[600],
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: availableWidth < 120 ? 8 : (isDesktop ? 12 : 10),
-                  ),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: availableWidth < 120
-                          ? 11
-                          : (isDesktop ? 14 : 12),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$clients30Days',
-                              style: TextStyle(
-                                fontSize: availableWidth < 120
-                                    ? 18
-                                    : (isDesktop ? 24 : 20),
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                            Text(
-                              '≤30 days',
-                              style: TextStyle(
-                                fontSize: availableWidth < 120
-                                    ? 9
-                                    : (isDesktop ? 11 : 10),
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$clients30To60Days',
-                              style: TextStyle(
-                                fontSize: availableWidth < 120
-                                    ? 18
-                                    : (isDesktop ? 24 : 20),
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange,
-                              ),
-                            ),
-                            Text(
-                              '31-60 days',
-                              style: TextStyle(
-                                fontSize: availableWidth < 120
-                                    ? 9
-                                    : (isDesktop ? 11 : 10),
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           );

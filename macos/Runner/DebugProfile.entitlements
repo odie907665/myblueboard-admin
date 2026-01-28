@@ -14,5 +14,9 @@
 	<true/>
 	<key>com.apple.security.personal-information.touchid</key>
 	<true/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.myblueboard.admin</string>
+	</array>
 </dict>
 </plist>

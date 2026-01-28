@@ -31,6 +31,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _loadClients() async {
+    if (!mounted) return;
+
     setState(() {
       isLoading = true;
       errorMessage = null;
@@ -38,23 +40,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     try {
       final clientsData = await _apiService.getClients();
+      // Renewal data (subscription_type, renew_date, etc.) is now included in client response
 
-      // Fetch settings for each client to get subscription info
-      for (var client in clientsData) {
-        try {
-          final settings = await _apiService.getClientSettings(
-            client['schema_name'],
-          );
-          if (settings != null && settings['settings'] != null) {
-            client['subscription_type'] =
-                settings['settings']['subscription_type'];
-            client['renew_date'] = settings['settings']['renew_date'];
-          }
-        } catch (e) {
-          print('Error fetching settings for ${client['schema_name']}: $e');
-          // Continue with other clients even if one fails
-        }
-      }
+      if (!mounted) return;
 
       setState(() {
         clients = clientsData;
@@ -62,6 +50,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
         errorMessage = e.toString();
@@ -251,21 +241,28 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: isSelected ? Colors.white : color, size: 20),
             const SizedBox(width: 8),
-            Text(
-              '$label: ',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.grey[700],
+            Flexible(
+              child: Text(
+                '$label: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? Colors.white : Colors.grey[700],
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : color,
+            Flexible(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -288,19 +285,26 @@ class _ClientsScreenState extends State<ClientsScreen> {
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
+          Flexible(
+            child: Text(
+              '$label: ',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.bold, color: color),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(fontWeight: FontWeight.bold, color: color),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

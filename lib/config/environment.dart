@@ -1,12 +1,9 @@
-enum Environment {
-  dev,
-  prod,
-}
+enum Environment { dev, prod }
 
 class EnvironmentConfig {
   // Change this to switch between dev and prod
-  static const Environment current = Environment.prod;
-  
+  static const Environment current = Environment.dev;
+
   static String get baseUrl {
     switch (current) {
       case Environment.dev:
@@ -15,7 +12,7 @@ class EnvironmentConfig {
         return 'https://signup.myblueboard.com';
     }
   }
-  
+
   static String get environmentName {
     switch (current) {
       case Environment.dev:
@@ -24,7 +21,7 @@ class EnvironmentConfig {
         return 'Production';
     }
   }
-  
+
   static bool get isDev => current == Environment.dev;
   static bool get isProd => current == Environment.prod;
 }

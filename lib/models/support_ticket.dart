@@ -1,3 +1,48 @@
+import 'ticket_category.dart';
+import 'ticket_tag.dart';
+
+class TicketAttachment {
+  final int id;
+  final int message;
+  final String fileName;
+  final int fileSize;
+  final String fileKey;
+  final String contentType;
+  final DateTime uploadedAt;
+
+  TicketAttachment({
+    required this.id,
+    required this.message,
+    required this.fileName,
+    required this.fileSize,
+    required this.fileKey,
+    required this.contentType,
+    required this.uploadedAt,
+  });
+
+  factory TicketAttachment.fromJson(Map<String, dynamic> json) {
+    return TicketAttachment(
+      id: json['id'],
+      message: json['message'],
+      fileName: json['file_name'],
+      fileSize: json['file_size'],
+      fileKey: json['file_key'],
+      contentType: json['content_type'],
+      uploadedAt: DateTime.parse(json['uploaded_at']),
+    );
+  }
+
+  String get fileSizeFormatted {
+    if (fileSize < 1024) {
+      return '$fileSize B';
+    } else if (fileSize < 1024 * 1024) {
+      return '${(fileSize / 1024).toStringAsFixed(1)} KB';
+    } else {
+      return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+  }
+}
+
 class SupportTicket {
   final int id;
   final String ticketId;
@@ -15,6 +60,8 @@ class SupportTicket {
   final int messageCount;
   final DateTime lastMessageAt;
   final String timeSinceCreated;
+  final List<TicketCategory> categories;
+  final List<TicketTag> tags;
 
   SupportTicket({
     required this.id,
@@ -33,6 +80,8 @@ class SupportTicket {
     required this.messageCount,
     required this.lastMessageAt,
     required this.timeSinceCreated,
+    this.categories = const [],
+    this.tags = const [],
   });
 
   factory SupportTicket.fromJson(Map<String, dynamic> json) {
@@ -59,6 +108,16 @@ class SupportTicket {
       messageCount: json['message_count'] ?? 0,
       lastMessageAt: DateTime.parse(json['last_message_at']),
       timeSinceCreated: json['time_since_created'] ?? '',
+      categories:
+          (json['categories'] as List?)
+              ?.map((cat) => TicketCategory.fromJson(cat))
+              .toList() ??
+          [],
+      tags:
+          (json['tags'] as List?)
+              ?.map((tag) => TicketTag.fromJson(tag))
+              .toList() ??
+          [],
     );
   }
 
@@ -80,6 +139,8 @@ class SupportTicket {
       'message_count': messageCount,
       'last_message_at': lastMessageAt.toIso8601String(),
       'time_since_created': timeSinceCreated,
+      'categories': categories.map((cat) => cat.toJson()).toList(),
+      'tags': tags.map((tag) => tag.toJson()).toList(),
     };
   }
 
@@ -127,8 +188,12 @@ class TicketMessage {
   final String bodyHtml;
   final int? createdBy;
   final DateTime createdAt;
+  final DateTime? editedAt;
+  final int? editedBy;
+  final bool isEdited;
   final String? messageId;
   final String? inReplyTo;
+  final List<TicketAttachment> attachments;
 
   TicketMessage({
     required this.id,
@@ -141,8 +206,12 @@ class TicketMessage {
     required this.bodyHtml,
     this.createdBy,
     required this.createdAt,
+    this.editedAt,
+    this.editedBy,
+    this.isEdited = false,
     this.messageId,
     this.inReplyTo,
+    this.attachments = const [],
   });
 
   factory TicketMessage.fromJson(Map<String, dynamic> json) {
@@ -157,8 +226,18 @@ class TicketMessage {
       bodyHtml: json['body_html'] ?? '',
       createdBy: json['created_by'],
       createdAt: DateTime.parse(json['created_at']),
+      editedAt: json['edited_at'] != null
+          ? DateTime.parse(json['edited_at'])
+          : null,
+      editedBy: json['edited_by'],
+      isEdited: json['is_edited'] ?? false,
       messageId: json['message_id'],
       inReplyTo: json['in_reply_to'],
+      attachments:
+          (json['attachments'] as List?)
+              ?.map((a) => TicketAttachment.fromJson(a))
+              .toList() ??
+          [],
     );
   }
 

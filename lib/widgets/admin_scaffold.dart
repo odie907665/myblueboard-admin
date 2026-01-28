@@ -8,12 +8,14 @@ class AdminScaffold extends StatelessWidget {
   final Widget body;
   final String title;
   final int selectedIndex;
+  final List<Widget>? actions;
 
   const AdminScaffold({
     super.key,
     required this.body,
     required this.title,
     this.selectedIndex = 0,
+    this.actions,
   });
 
   @override
@@ -120,6 +122,8 @@ class AdminScaffold extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
+                            // Custom actions
+                            if (actions != null) ...actions!,
                             // Theme Toggle
                             Consumer<ThemeProvider>(
                               builder: (context, themeProvider, _) {

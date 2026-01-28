@@ -30,6 +30,11 @@ class ApiService {
     return headers;
   }
 
+  // Public method for other services to get authenticated headers
+  Map<String, String> getAuthHeaders() {
+    return _getHeaders(includeAuth: true);
+  }
+
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       print('Attempting login to: ${ApiConfig.loginEndpoint}');
@@ -98,10 +103,16 @@ class ApiService {
   }
 
   // Dashboard
-  Future<Map<String, dynamic>?> getDashboardStats() async {
+  Future<Map<String, dynamic>?> getDashboardStats({
+    bool forceRefresh = false,
+  }) async {
     try {
+      final url = forceRefresh
+          ? '${ApiConfig.dashboardStatsEndpoint}?refresh=true'
+          : ApiConfig.dashboardStatsEndpoint;
+
       final response = await http.get(
-        Uri.parse(ApiConfig.dashboardStatsEndpoint),
+        Uri.parse(url),
         headers: _getHeaders(includeAuth: true),
       );
 
@@ -110,7 +121,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          return data['stats'];
+          return data;
         }
       }
       return null;

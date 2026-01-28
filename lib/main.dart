@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/notification_provider.dart';
 import 'config/environment.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/users_screen.dart';
 import 'screens/clients_screen.dart';
 import 'screens/client_settings_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/support_tickets_screen.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Suppress debug print messages from flutter_quill in debug mode
+  if (kDebugMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null &&
+          (message.contains('FlutterQuillEmbeds') ||
+              message.contains('QuillRawEditor') ||
+              message.contains('quill_native_bridge'))) {
+        return; // Suppress quill debug messages
+      }
+      // Print other messages normally
+      debugPrintThrottled(message, wrapWidth: wrapWidth);
+    };
+  }
+
   runApp(const MyApp());
 }
 
@@ -24,6 +44,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -66,8 +87,7 @@ class MyApp extends StatelessWidget {
               '/clients': (context) => const ClientsScreen(),
               '/accounts': (context) =>
                   const PlaceholderScreen(title: 'Accounts'),
-              '/tickets': (context) =>
-                  const PlaceholderScreen(title: 'Tickets'),
+              '/tickets': (context) => SupportTicketsScreen(),
               '/settings': (context) =>
                   const PlaceholderScreen(title: 'Settings'),
             },
