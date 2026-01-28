@@ -16,7 +16,6 @@ class TicketService {
     final headers = _apiService.getAuthHeaders();
     // Explicitly set Accept header to ensure JSON response
     headers['Accept'] = 'application/json';
-    print('Ticket service headers: $headers');
     return headers;
   }
 
@@ -37,21 +36,12 @@ class TicketService {
         url += '?' + params.entries.map((e) => '${e.key}=${e.value}').join('&');
       }
 
-      print('Fetching tickets from: $url');
-      print('Headers: ${_getHeaders()}');
-
       // Use a fresh client to avoid cookie persistence issues
       final client = http.Client();
       try {
         final response = await client.get(
           Uri.parse(url),
           headers: _getHeaders(),
-        );
-        print('Response status: ${response.statusCode}');
-        print('Response headers: ${response.headers}');
-        print('Response body length: ${response.body.length}');
-        print(
-          'Response body first 500 chars: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}',
         );
 
         if (response.statusCode == 200) {
@@ -66,7 +56,6 @@ class TicketService {
         client.close();
       }
     } catch (e) {
-      print('Error fetching tickets: $e');
       throw Exception('Failed to fetch tickets: $e');
     }
   }
@@ -241,6 +230,21 @@ class TicketService {
       }
     } catch (e) {
       throw Exception('Failed to close ticket: $e');
+    }
+  }
+
+  Future<void> deleteTicket(int ticketId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/api/admin/support-tickets/$ticketId/'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete ticket');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete ticket: $e');
     }
   }
 

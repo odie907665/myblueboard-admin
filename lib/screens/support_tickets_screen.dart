@@ -51,12 +51,17 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         });
 
         // Update badge count based on actual 'new' tickets
-        final newTicketCount = tickets.where((t) => t.status == 'new').length;
-        if (context.mounted) {
-          Provider.of<NotificationProvider>(
-            context,
-            listen: false,
-          ).updateBadgeFromServer(newTicketCount);
+        try {
+          final newTicketCount = tickets.where((t) => t.status == 'new').length;
+          if (context.mounted) {
+            final notificationProvider = Provider.of<NotificationProvider>(
+              context,
+              listen: false,
+            );
+            await notificationProvider.updateBadgeFromServer(newTicketCount);
+          }
+        } catch (e) {
+          // Silently fail if notification provider is not available
         }
       }
     } catch (e) {
@@ -748,10 +753,16 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
       // Update badge count if status changed from 'new' to something else
       if (mounted && oldStatus == 'new' && newStatus != 'new') {
-        Provider.of<NotificationProvider>(
-          context,
-          listen: false,
-        ).markTicketAsViewed();
+        try {
+          final notificationProvider = Provider.of<NotificationProvider>(
+            context,
+            listen: false,
+          );
+          await notificationProvider.markTicketAsViewed();
+        } catch (e) {
+          // Silently fail if notification provider is not available
+          print('Could not update badge count: $e');
+        }
       }
 
       if (mounted) {
@@ -1167,6 +1178,54 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     }
   }
 
+  Future<void> _deleteTicket() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Ticket'),
+          content: Text(
+            'Are you sure you want to delete ticket ${ticket?.ticketId}?\n\nThis will permanently delete the ticket and all its messages. This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        await _ticketService.deleteTicket(widget.ticketId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ticket deleted successfully')),
+          );
+          // Go back to ticket list
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete ticket: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1225,6 +1284,14 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               onPressed: () => _showTagsDialog(),
             ),
           ],
+          // Delete button (always available)
+          if (ticket != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete Ticket',
+              onPressed: _deleteTicket,
+              color: Colors.red[700],
+            ),
         ],
       ),
       body: isLoading

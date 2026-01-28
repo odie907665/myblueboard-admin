@@ -15,6 +15,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'users': 0,
     'accounts': 0,
     'tickets': 0,
+    'tickets_new': 0,
+    'tickets_active': 0,
     'clients_30_days': 0,
     'clients_30_60_days': 0,
   };
@@ -51,6 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'users': statsData['users'] ?? 0,
               'accounts': statsData['accounts'] ?? 0,
               'tickets': statsData['tickets'] ?? 0,
+              'tickets_new': statsData['tickets_new'] ?? 0,
+              'tickets_active': statsData['tickets_active'] ?? 0,
               'clients_30_days': statsData['clients_30_days'] ?? 0,
               'clients_30_60_days': statsData['clients_30_60_days'] ?? 0,
             };
@@ -140,7 +144,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           stats['clients'].toString(),
                           Icons.business,
                           const Color(0xFF004aad),
-                          '+12%',
                           isDesktop,
                         ),
                         _buildRenewalStatCard(
@@ -158,16 +161,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           stats['accounts'].toString(),
                           Icons.account_balance,
                           Colors.orange,
-                          '+5%',
                           isDesktop,
                         ),
-                        _buildStatCard(
+                        _buildTicketStatCard(
                           context,
                           'Tickets',
-                          stats['tickets'].toString(),
+                          stats['tickets_new'] ?? 0,
+                          stats['tickets_active'] ?? 0,
                           Icons.confirmation_number,
                           Colors.purple,
-                          '-3%',
                           isDesktop,
                         ),
                       ],
@@ -265,8 +267,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'View and manage support tickets',
               Icons.support_agent,
               Colors.purple,
-              () {
-                Navigator.of(context).pushNamed('/tickets');
+              () async {
+                await Navigator.of(context).pushNamed('/tickets');
+                // Refresh dashboard data when returning from tickets
+                _loadDashboardData(forceRefresh: true);
               },
             ),
           ],
@@ -334,10 +338,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String value,
     IconData icon,
     Color color,
-    String trend,
-    bool isDesktop,
-  ) {
-    final isPositive = trend.startsWith('+');
+    bool isDesktop, {
+    String? trend,
+  }) {
+    final isPositive = trend?.startsWith('+') ?? false;
     return Card(
       elevation: 0,
       clipBehavior: Clip.hardEdge,
@@ -380,30 +384,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             child: Icon(icon, color: color, size: iconSize),
                           ),
                           const Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: availableWidth < 120
-                                  ? 4
-                                  : (isDesktop ? 8 : 6),
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isPositive
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              trend,
-                              style: TextStyle(
-                                fontSize: availableWidth < 120
-                                    ? 9
-                                    : (isDesktop ? 12 : 10),
-                                fontWeight: FontWeight.bold,
-                                color: isPositive ? Colors.green : Colors.red,
+                          if (trend != null)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: availableWidth < 120
+                                    ? 4
+                                    : (isDesktop ? 8 : 6),
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isPositive
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                trend,
+                                style: TextStyle(
+                                  fontSize: availableWidth < 120
+                                      ? 9
+                                      : (isDesktop ? 12 : 10),
+                                  fontWeight: FontWeight.bold,
+                                  color: isPositive ? Colors.green : Colors.red,
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                       SizedBox(
@@ -469,7 +474,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.topLeft,
                 child: SizedBox(
-                  width: availableWidth - (availableWidth < 120 ? 8 : (isDesktop ? 24 : 16)),
+                  width:
+                      availableWidth -
+                      (availableWidth < 120 ? 8 : (isDesktop ? 24 : 16)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -576,6 +583,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildTicketStatCard(
+    BuildContext context,
+    String title,
+    int newTickets,
+    int activeTickets,
+    IconData icon,
+    Color color,
+    bool isDesktop,
+  ) {
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.hardEdge,
+      child: InkWell(
+        onTap: () async {
+          await Navigator.of(context).pushNamed('/tickets');
+          // Refresh dashboard data when returning from tickets
+          _loadDashboardData(forceRefresh: true);
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth;
+            final iconSize = availableWidth < 120
+                ? 18.0
+                : (isDesktop ? 24.0 : 20.0);
+
+            return ClipRect(
+              child: Padding(
+                padding: EdgeInsets.all(
+                  availableWidth < 120 ? 4 : (isDesktop ? 12 : 8),
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topLeft,
+                  child: SizedBox(
+                    width:
+                        availableWidth -
+                        (availableWidth < 120 ? 8 : (isDesktop ? 24 : 16)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(
+                                availableWidth < 120 ? 6 : (isDesktop ? 10 : 8),
+                              ),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(icon, color: color, size: iconSize),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: availableWidth < 120
+                              ? 6
+                              : (isDesktop ? 10 : 8),
+                        ),
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: availableWidth < 120
+                                ? 11
+                                : (isDesktop ? 14 : 12),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$newTickets',
+                                    style: TextStyle(
+                                      fontSize: availableWidth < 120
+                                          ? 18
+                                          : (isDesktop ? 24 : 20),
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    'New',
+                                    style: TextStyle(
+                                      fontSize: availableWidth < 120
+                                          ? 9
+                                          : (isDesktop ? 11 : 10),
+                                      color: Colors.grey[600],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$activeTickets',
+                                    style: TextStyle(
+                                      fontSize: availableWidth < 120
+                                          ? 18
+                                          : (isDesktop ? 24 : 20),
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    'Active',
+                                    style: TextStyle(
+                                      fontSize: availableWidth < 120
+                                          ? 9
+                                          : (isDesktop ? 11 : 10),
+                                      color: Colors.grey[600],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

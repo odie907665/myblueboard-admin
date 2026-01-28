@@ -37,15 +37,11 @@ class ApiService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      print('Attempting login to: ${ApiConfig.loginEndpoint}');
       final response = await http.post(
         Uri.parse(ApiConfig.loginEndpoint),
         headers: _getHeaders(),
         body: jsonEncode({'email': email, 'password': password}),
       );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -53,18 +49,15 @@ class ApiService {
         // Store tokens
         _accessToken = data['tokens']['access'];
         _refreshToken = data['tokens']['refresh'];
-        print('Login successful, tokens stored');
         return data;
       } else {
         final errorMsg =
             data['errors']?.toString() ??
             data['message']?.toString() ??
             'Login failed';
-        print('Login failed: $errorMsg');
         throw Exception(errorMsg);
       }
     } catch (e) {
-      print('Login error: $e');
       throw Exception('Failed to connect to server: $e');
     }
   }
@@ -116,8 +109,6 @@ class ApiService {
         headers: _getHeaders(includeAuth: true),
       );
 
-      print('Dashboard stats response: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -126,7 +117,6 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error fetching dashboard stats: $e');
       return null;
     }
   }
@@ -138,8 +128,6 @@ class ApiService {
         Uri.parse(ApiConfig.clientsEndpoint),
         headers: _getHeaders(includeAuth: true),
       );
-
-      print('Clients response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -161,8 +149,6 @@ class ApiService {
         headers: _getHeaders(includeAuth: true),
       );
 
-      print('Client settings response: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -171,7 +157,6 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error fetching client settings: $e');
       return null;
     }
   }
@@ -183,8 +168,6 @@ class ApiService {
         headers: _getHeaders(includeAuth: true),
       );
 
-      print('Client admins response: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -193,7 +176,6 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error fetching client admins: $e');
       return null;
     }
   }

@@ -10,7 +10,6 @@ import '../firebase_options.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('Handling background message: ${message.messageId}');
 
   // Update badge count in background
   await NotificationService._updateBadgeCount();
@@ -55,8 +54,6 @@ class NotificationService {
           );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('User granted notification permissions');
-
         // Initialize local notifications
         await _initializeLocalNotifications();
 
@@ -67,7 +64,6 @@ class NotificationService {
 
         // Get device token
         _deviceToken = await _firebaseMessaging.getToken();
-        print('FCM Device Token: $_deviceToken');
 
         // Save token to preferences
         if (_deviceToken != null) {
@@ -86,12 +82,8 @@ class NotificationService {
 
         // Set up message handlers
         _setupMessageHandlers();
-      } else {
-        print('User declined or has not accepted notification permissions');
       }
-    } catch (e) {
-      print('Error initializing notifications: $e');
-    }
+    } catch (e) {}
   }
 
   /// Initialize local notifications (for foreground notifications)
@@ -130,8 +122,6 @@ class NotificationService {
   void _setupMessageHandlers() {
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      print('Received foreground message: ${message.messageId}');
-
       // Update badge count
       await _incrementBadgeCount();
 
@@ -144,16 +134,12 @@ class NotificationService {
 
     // When app is opened from notification (background/terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Notification opened app: ${message.messageId}');
       _newTicketController.add(message.data);
     });
 
     // Check for initial message (app opened from terminated state)
     _firebaseMessaging.getInitialMessage().then((message) {
       if (message != null) {
-        print(
-          'App opened from terminated state with message: ${message.messageId}',
-        );
         _newTicketController.add(message.data);
       }
     });
@@ -201,7 +187,6 @@ class NotificationService {
 
   /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    print('Notification tapped with payload: ${response.payload}');
     // Parse and emit the notification data
     if (response.payload != null) {
       // You can navigate to the ticket detail screen here
@@ -273,7 +258,6 @@ class NotificationService {
   Future<void> _saveDeviceToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_deviceTokenKey, token);
-    print('New FCM token: $token');
     // TODO: Send this token to your backend server
   }
 

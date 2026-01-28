@@ -9,20 +9,27 @@ class NotificationProvider with ChangeNotifier {
 
   int _badgeCount = 0;
   bool _isInitialized = false;
+  bool _isInitializing = false;
 
   int get badgeCount => _badgeCount;
   bool get isInitialized => _isInitialized;
   String? get deviceToken => _notificationService.deviceToken;
 
   NotificationProvider() {
+    // Don't await here - let it initialize in the background
     _initialize();
   }
 
   Future<void> _initialize() async {
+    if (_isInitializing || _isInitialized) return;
+
+    _isInitializing = true;
+
     try {
       await _notificationService.initialize();
       _badgeCount = _notificationService.badgeCount;
       _isInitialized = true;
+      _isInitializing = false;
       notifyListeners();
 
       // Register device token with backend
@@ -32,11 +39,12 @@ class NotificationProvider with ChangeNotifier {
 
       // Listen for new tickets
       _notificationService.onNewTicket.listen((data) {
-        print('New ticket notification received: $data');
         _updateBadgeCount();
       });
     } catch (e) {
-      print('Error initializing notification provider: $e');
+      _isInitializing = false;
+      // Don't set _isInitialized to true on error
+      // Just continue - notifications won't work but app won't crash
     }
   }
 
@@ -50,10 +58,7 @@ class NotificationProvider with ChangeNotifier {
       }
 
       await _ticketService.registerDeviceToken(token, platform);
-      print('Device token registered with backend');
-    } catch (e) {
-      print('Error registering device token: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> _updateBadgeCount() async {
@@ -63,18 +68,30 @@ class NotificationProvider with ChangeNotifier {
 
   /// Call this when a ticket status changes from 'new'
   Future<void> markTicketAsViewed() async {
+    if (!_isInitialized) {
+      return;
+    }
+
     await _notificationService.clearBadgeForTicket();
     await _updateBadgeCount();
   }
 
   /// Call this to reset badge count
   Future<void> resetBadge() async {
+    if (!_isInitialized) {
+      return;
+    }
+
     await _notificationService.resetBadgeCount();
     await _updateBadgeCount();
   }
 
   /// Update badge count from server (e.g., after fetching tickets)
   Future<void> updateBadgeFromServer(int newTicketCount) async {
+    if (!_isInitialized) {
+      return;
+    }
+
     await _notificationService.setBadgeCount(newTicketCount);
     await _updateBadgeCount();
   }

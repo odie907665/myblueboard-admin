@@ -57,7 +57,6 @@ class AuthProvider extends ChangeNotifier {
       );
       return _isAuthenticated;
     } catch (e) {
-      print('AuthProvider: Biometric login error: $e');
       _error = e.toString();
       return false;
     } finally {
@@ -76,12 +75,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('AuthProvider: Starting login...');
       final response = await _apiService.login(email, password);
-
-      print('AuthProvider: Login response received');
-      print('AuthProvider: User data: ${response['user']}');
-      print('AuthProvider: Has tokens: ${response['tokens'] != null}');
 
       // Store tokens in memory
       _accessToken = response['tokens']['access'];
@@ -96,18 +90,12 @@ class AuthProvider extends ChangeNotifier {
       if (saveBiometric) {
         await _biometricService.enableBiometric(email, password);
       }
-
-      print(
-        'AuthProvider: Login successful, isAuthenticated = $_isAuthenticated',
-      );
     } catch (e) {
-      print('AuthProvider: Login error: $e');
       _error = e.toString();
       _isAuthenticated = false;
     } finally {
       _isLoading = false;
       notifyListeners();
-      print('AuthProvider: notifyListeners called');
     }
   }
 
